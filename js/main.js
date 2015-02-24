@@ -14,28 +14,42 @@
     var BARS = 'Bars';
     var COLUMNS = 'Columns';
     var GRAPH_TYPES = [LINES, LINES_POINTS, POINTS, BARS, COLUMNS];
+    var GOOGLECHARTS_TYPE_MAPPING = {
+        'Lines': 'LineChart',
+        'Lines and Points': 'LineChart',
+        'Points': 'ScatterChart',
+        'Bars': 'BarChart',
+        'Columns': 'ColumnChart'
+    };
 
-    var createGraph = function createGraph() {
+    var create_graph_config = function create_graph_config() {
+
+        var series_checkboxes = document.getElementsByName('series');
+        var series = [];
+
+        //Get the selected checkboxes
+        for (var i = 0; i < series_checkboxes.length; i++) {
+            if (series_checkboxes[i].checked) {
+                series.push(series_checkboxes[i].value);
+            }
+        }
+        if (series.length > 0) {
+            create_flotr2_config(series);
+            create_google_charts_config(series);
+        }
+    };
+
+    var create_flotr2_config = function create_flotr2_config(series) {
 
         var i, row;
         var graph_type = graph_select.getValue();
         var group_column = group_axis_select.getValue();
-        var series = [];      //Contains all the series data
         var data = {};        //Contains all the series that wil be shown in the graph
         var ticks = [];       //When string are used as group column, we need to format the values
         var series_meta = {}; //Contails the name of the datasets
         var show_lines = (graph_type == LINES || graph_type == LINES_POINTS) ? true : false;
         var show_points = (graph_type == POINTS || graph_type == LINES_POINTS) ? true : false;
         var group_column_axis = graph_type == BARS ? 'yaxis' : 'xaxis';
-
-        var series_checkboxes = document.getElementsByName('series');
-
-        //Get the selected checkboxes
-        for (i = 0; i < series_checkboxes.length; i++) {
-            if (series_checkboxes[i].checked) {
-                series.push(series_checkboxes[i].value);
-            }
-        }
 
         //Group Column type
         var group_column_type = null;
@@ -68,16 +82,16 @@
                 //Numbers codified as strings must be transformed in real JS numbers
                 //Just in case the previous widget/operator hasn't done it.
                 switch (group_column_type) {
-                    case 'number':
-                        group_column_value = Number(group_column_value);
-                        break;
-                    default:
-                        //Ticks should be only introduced once
-                        if (i === 0) {
-                            ticks.push([j, group_column_value]);
-                        }
-                        group_column_value = j;
-                        break;
+                case 'number':
+                    group_column_value = Number(group_column_value);
+                    break;
+                default:
+                    //Ticks should be only introduced once
+                    if (i === 0) {
+                        ticks.push([j, group_column_value]);
+                    }
+                    group_column_value = j;
+                    break;
                 }
 
                 //In the bars graph the data should be encoded the other way around
@@ -136,16 +150,45 @@
             };
         }
 
-        MashupPlatform.wiring.pushEvent('graphConfig', JSON.stringify(flotr2Config));
+        MashupPlatform.wiring.pushEvent('flotr2-graph-config', JSON.stringify(flotr2Config));
+    };
+
+    var create_google_charts_config = function create_google_charts_config(series) {
+
+        var i, j, dataset_row, row;
+        var graph_type = graph_select.getValue();
+        var group_column = group_axis_select.getValue();
+        var data = [];        //Contains all the series that wil be shown in the graph
+        var show_points = (graph_type == POINTS || graph_type == LINES_POINTS) ? true : false;
+
+        // Format data
+        data.push([group_column].concat(series));
+        for (i = 0; i < dataset.data.length; i++) {
+            dataset_row = dataset.data[i];
+            row = [dataset_row[group_column]];
+            for (j = 0; j < series.length; j++) {
+                row.push(dataset_row[series[j]]);
+            }
+            data.push(row);
+        }
+
+        // Google Charts configuration
+        var googlechartsConfig = {
+            type: GOOGLECHARTS_TYPE_MAPPING[graph_type],
+            options: {},
+            data: data
+        };
+
+        //Configure the bar chart
+        if (graph_type === LINES_POINTS) {
+            googlechartsConfig.options.pointSize = 3;
+        }
+
+        MashupPlatform.wiring.pushEvent('googlecharts-graph-config', JSON.stringify(googlechartsConfig));
     };
 
     var showSeriesInfo = function showSeriesInfo(dataset_json) {
 
-        // Clear the current information
-        group_axis_select.clear();
-        series_div.innerHTML = '';
-
-        // The information is saved globally
         dataset = JSON.parse(dataset_json);
 
         // Fields Name
@@ -163,12 +206,11 @@
             entries.push({label: fields[i], value: fields[i]});
         }
 
+        group_axis_select.clear();
         group_axis_select.addEntries(entries);
 
-        // Capture select change
-        group_axis_select.addEventListener('change', createGraph);
-
         // Add the series
+        series_div.innerHTML = '';
         for (i = 0; i < fields.length; i++) {
 
             var label = document.createElement('label');
@@ -184,58 +226,56 @@
             series_div.appendChild(label);
             series_div.appendChild(document.createElement('br'));
 
-            checkbox.addEventListener('change', createGraph);
+            checkbox.addEventListener('change', create_graph_config);
         }
-
     };
 
     var init = function init() {
-        layout = new StyledElements.BorderLayout();
+        layout = new StyledElements.StyledNotebook();
         layout.insertInto(document.body);
 
-        //Create the graph selector
-        var graph_select_title = document.createElement('h3');
-        graph_select_title.innerHTML = 'Graph Type';
-        layout.getCenterContainer().appendChild(graph_select_title);
+        var chart_tab = layout.createTab({name: "Chart", closable: false});
 
-        //Create the select
+        // Create the select
         graph_select = new StyledElements.StyledSelect({'class': 'full'});
-        graph_select.addEventListener('change', createGraph);
-        layout.getCenterContainer().appendChild(graph_select);
+        graph_select.addEventListener('change', create_graph_config);
+        chart_tab.appendChild(graph_select);
 
-        //Append types
+        // Append types
         var entries = [];
         GRAPH_TYPES.forEach(function (type) {
             entries.push({label: type, value: type});
         });
         graph_select.addEntries(entries);
 
-        //Create the group column title
+        var data_tab = layout.createTab({name: "Data", closable: false});
+
+        // Create the group column title
         group_title = document.createElement('h3');
         group_title.innerHTML = 'Group Column (Axis 1)';
-        layout.getCenterContainer().appendChild(group_title);
+        data_tab.appendChild(group_title);
 
-        //Create the group column select
+        // Create the group column select
         group_axis_select = new StyledElements.StyledSelect({'class': 'full'});
-        group_axis_select.addEventListener('change', createGraph);
-        layout.getCenterContainer().appendChild(group_axis_select);
+        group_axis_select.addEventListener('change', create_graph_config);
+        data_tab.appendChild(group_axis_select);
 
-        //Create the series title
+        // Create the series title
         series_title = document.createElement('h3');
         series_title.innerHTML = 'Series (Axis 2)';
-        layout.getCenterContainer().appendChild(series_title);
+        data_tab.appendChild(series_title);
 
-        //Create the div where the series will be inserted
+        // Create the div where the series will be inserted
         series_div = document.createElement('div');
-        layout.getCenterContainer().appendChild(series_div);
+        data_tab.appendChild(series_div);
 
-        //Repaint the layout (needed)
+        // Repaint the layout (needed)
         layout.repaint();
 
-        //Recieve events for the "dataset" input endpoint
+        // Recieve events for the "dataset" input endpoint
         MashupPlatform.wiring.registerCallback('dataset', showSeriesInfo);
 
-        //Repaint on size change
+        // Repaint on size change
         MashupPlatform.widget.context.registerCallback(function (changes) {
             if ('widthInPixels' in changes || 'heightInPixels' in changes) {
                 layout.repaint();
