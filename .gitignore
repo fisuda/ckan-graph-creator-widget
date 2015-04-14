@@ -1,0 +1,4 @@
+bower_components/
+src/lib/
+node_modules/
+build/
