@@ -140,14 +140,14 @@ module.exports = function (grunt) {
                     jshintrc: '.jshintrc-jasmine'
                 },
                 files: {
-                    src: ['src/test/**/*.js', '!src/test/fixtures/']
+                    src: ['src/test/js/**/*.js']
                 }
             }
         },
 
         jasmine: {
             test: {
-                src: ['src/js/*.js'],
+                src: ['src/js/*.js', '!src/js/main.js'],
                 options: {
                     specs: 'src/test/js/*Spec.js',
                     helpers: ['src/test/helpers/*.js'],
@@ -193,7 +193,7 @@ module.exports = function (grunt) {
         'jshint:grunt',
         'jshint',
         'jscs',
-        //'jasmine:coverage'
+        'jasmine:coverage'
     ]);
 
     grunt.registerTask('default', [
