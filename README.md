@@ -1,4 +1,4 @@
-CKAN Graph creator widget
+CKAN Graph Creator widget
 =========================
 
 ...
