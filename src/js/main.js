@@ -3,15 +3,15 @@
  *
  */
 
-/*global $, Widget */
+/* global Widget */
 
 
-$(function () {
+(function () {
 
     "use strict";
 
     var widget = new Widget();
     //Start the execution when the DOM is enterely loaded
-    document.addEventListener('DOMContentLoaded', widget.init.bind(this), true);
+    document.addEventListener('DOMContentLoaded', widget.init.bind(widget), true);
 
-});
+})();

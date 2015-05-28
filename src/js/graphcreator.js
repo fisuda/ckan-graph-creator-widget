@@ -3,8 +3,7 @@
  *
  */
 
-/* jshint unused:false */
-/* global MashupPlatform, StyledElements */
+/* global GraphSelector, MashupPlatform, StyledElements */
 
 
 window.Widget = (function () {
@@ -19,7 +18,7 @@ window.Widget = (function () {
         this.layout = null;
         this.group_title = null;
         this.series_title = null;
-        this.graph_select = null;
+        this.current_graph_type = null;
         this.group_axis_select = null;
         this.series_div = null;
         this.dataset = null;     //The dataset to be used. {structure: {...}, data: {...}}
@@ -44,7 +43,7 @@ window.Widget = (function () {
     var POINTS = 'Points';
     var BARS = 'Bars';
     var COLUMNS = 'Columns';
-    var GRAPH_TYPES = [LINES, LINES_POINTS, POINTS, BARS, COLUMNS];
+
     var GOOGLECHARTS_TYPE_MAPPING = {
             'Lines': 'LineChart',
             'Lines and Points': 'LineChart',
@@ -58,39 +57,33 @@ window.Widget = (function () {
      * ================================================================================== */
 
     Widget.prototype.init = function init() {
-        this.layout = new StyledElements.StyledNotebook();
+        this.layout = new StyledElements.StyledNotebook({'class': 'se-notebook-crumbs'});
         this.layout.insertInto(document.body);
 
-        var chart_tab = this.layout.createTab({name: "Chart", closable: false});
+        var chart_tab = this.layout.createTab({name: "1. Chart", closable: false});
 
-        // Create the select
-        this.graph_select = new StyledElements.StyledSelect({'class': 'full'});
-        this.graph_select.addEventListener('change', create_graph_config);
-        chart_tab.appendChild(this.graph_select);
+        // Create the graph selection tab
+        this.graph_selector = new GraphSelector(chart_tab, function (graph_type) {
+            this.current_graph_type = graph_type;
+            create_graph_config.call(this);
+        }.bind(this));
 
-        // Append types
-        var entries = [];
-        GRAPH_TYPES.forEach(function (type) {
-            entries.push({label: type, value: type});
-        });
-        this.graph_select.addEntries(entries);
-
-        var data_tab = this.layout.createTab({name: "Data", closable: false});
+        var data_tab = this.layout.createTab({name: "2. Data", closable: false});
 
         // Create the group column title
-        this.group_title = document.createElement('h3');
-        this.group_title.innerHTML = 'Group Column (Axis 1)';
-        data_tab.appendChild(this.group_title);
+        var group_title = document.createElement('h3');
+        group_title.innerHTML = 'Group Column (Axis 1)';
+        data_tab.appendChild(group_title);
 
         // Create the group column select
         this.group_axis_select = new StyledElements.StyledSelect({'class': 'full'});
-        this.group_axis_select.addEventListener('change', create_graph_config);
+        this.group_axis_select.addEventListener('change', create_graph_config.bind(this));
         data_tab.appendChild(this.group_axis_select);
 
         // Create the series title
-        this.series_title = document.createElement('h3');
-        this.series_title.innerHTML = 'Series (Axis 2)';
-        data_tab.appendChild(this.series_title);
+        var series_title = document.createElement('h3');
+        series_title.innerHTML = 'Series (Axis 2)';
+        data_tab.appendChild(series_title);
 
         // Create the div where the series will be inserted
         this.series_div = document.createElement('div');
@@ -98,16 +91,6 @@ window.Widget = (function () {
 
         // Repaint the layout (needed)
         this.layout.repaint();
-
-        // Recieve events for the "dataset" input endpoint
-        //MashupPlatform.wiring.registerCallback('dataset', showSeriesInfo);
-
-        // Repaint on size change
-        //MashupPlatform.widget.context.registerCallback(function (changes) {
-        //    if ('widthInPixels' in changes || 'heightInPixels' in changes) {
-        //        this.layout.repaint();
-        //    }
-        //});
     };
 
     /* ==================================================================================
@@ -126,15 +109,15 @@ window.Widget = (function () {
             }
         }
         if (series.length > 0) {
-            create_flotr2_config(series);
-            create_google_charts_config(series);
+            create_flotr2_config.call(this, series);
+            create_google_charts_config.call(this, series);
         }
     };
 
     var create_flotr2_config = function create_flotr2_config(series) {
 
         var i, row;
-        var graph_type = this.graph_select.getValue();
+        var graph_type = this.current_graph_type;
         var group_column = this.group_axis_select.getValue();
         var data = {};        //Contains all the series that wil be shown in the graph
         var ticks = [];       //When string are used as group column, we need to format the values
@@ -248,12 +231,10 @@ window.Widget = (function () {
     var create_google_charts_config = function create_google_charts_config(series) {
 
         var i, j, dataset_row, row;
-        var graph_type = this.graph_select.getValue();
+        var graph_type = this.current_graph_type;
         var group_column = this.group_axis_select.getValue();
         var data = [];        //Contains all the series that wil be shown in the graph
-        var show_points = (graph_type == POINTS || graph_type == LINES_POINTS) ? true : false;
-
-        //var seriesInput = JSON.parse(series); // Parsear los datos que se reciben para que se pueda dibujar la gráfica
+        //var show_points = (graph_type == POINTS || graph_type == LINES_POINTS) ? true : false;
 
         // Format data
         data.push([group_column].concat(series)); // Modificar series
@@ -320,7 +301,7 @@ window.Widget = (function () {
             this.series_div.appendChild(label);
             this.series_div.appendChild(document.createElement('br'));
 
-            checkbox.addEventListener('change', create_graph_config);
+            checkbox.addEventListener('change', create_graph_config.bind(this));
         }
     };
 
