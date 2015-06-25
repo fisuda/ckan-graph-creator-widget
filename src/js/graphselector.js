@@ -26,7 +26,7 @@
         'bargraph',
         'scattergraph',
         'piegraph',
-        'mapgraph'
+        'geograph'
     ];
 
     var graph_types_info = {
@@ -77,8 +77,8 @@
                 {id: 'donutchart', label: "Donut Chart"}
             ]
         },
-        mapgraph: {
-            label: 'Map Graph',
+        geograph: {
+            label: 'Geo Graph',
             subtypes: [
                 {id: 'geochart', label: "Geo Chart"},
                 {id: 'geochart-markers', label: "Geo Chart Markers"}
