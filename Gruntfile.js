@@ -19,6 +19,11 @@ module.exports = function (grunt) {
 
     'use strict';
 
+    var fs = require('fs');
+
+    var jshintrc_pre = JSON.parse(fs.readFileSync('.jshintrc', 'utf8'));
+    jshintrc_pre.devel = true;
+
     grunt.initConfig({
 
         pkg: grunt.file.readJSON('package.json'),
@@ -119,10 +124,16 @@ module.exports = function (grunt) {
         },
 
         jshint: {
-            options: {
-                jshintrc: true
+            pre: {
+                options: jshintrc_pre,
+                files: {
+                    src: ['src/js/**/*.js']
+                }
             },
-            all: {
+            build: {
+                options: {
+                    jshintrc: '.jshintrc'
+                },
                 files: {
                     src: ['src/js/**/*.js']
                 }
@@ -191,13 +202,15 @@ module.exports = function (grunt) {
     grunt.registerTask('test', [
         'bower:install',
         'jshint:grunt',
-        'jshint',
+        'jshint:pre',
+        'jshint:test',
         'jscs',
         'jasmine:coverage'
     ]);
 
     grunt.registerTask('default', [
         'test',
+        'jshint:build',
         'clean:temp',
         'copy:main',
         'strip_code',
