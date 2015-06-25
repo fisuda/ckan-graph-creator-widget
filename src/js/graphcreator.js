@@ -33,6 +33,8 @@ window.Widget = (function () {
         this.group_axis_select = null;
         this.series_div = null;
         this.dataset = null;     //The dataset to be used. {structure: {...}, data: {...}}
+        this.column_info = null;
+        this._3axis_alternative = null;
 
         // Recieve events for the "dataset" input endpoint
         MashupPlatform.wiring.registerCallback('dataset', showSeriesInfo.bind(this));
@@ -46,59 +48,99 @@ window.Widget = (function () {
     };
 
     /* ==================================================================================
-     *  CONSTANTS
-     * ================================================================================== */
-
-    var LINES = 'Lines';
-    var LINES_POINTS = 'Lines and Points';
-    var POINTS = 'Points';
-    var BARS = 'Bars';
-    var COLUMNS = 'Columns';
-
-    var GOOGLECHARTS_TYPE_MAPPING = {
-            'Lines': 'LineChart',
-            'Lines and Points': 'LineChart',
-            'Points': 'ScatterChart',
-            'Bars': 'BarChart',
-            'Columns': 'ColumnChart'
-    };
-
-    /* ==================================================================================
      *  PUBLIC METHODS
      * ================================================================================== */
+
+    var build_normal_form_alternative = function build_normal_form_alternative(container) {
+        // Create the group column title
+        var group_title = document.createElement('h3');
+        group_title.innerHTML = 'Axis X';
+        container.appendChild(group_title);
+
+        // Create the group column select
+        this.group_axis_select = new StyledElements.StyledSelect({'class': 'full'});
+        this.group_axis_select.addEventListener('change', create_graph_config.bind(this));
+        container.appendChild(this.group_axis_select);
+
+        // Create the series title
+        var series_title = document.createElement('h3');
+        series_title.innerHTML = 'Axis Y';
+        container.appendChild(series_title);
+
+        // Create the div where the series will be inserted
+        this.series_div = document.createElement('div');
+        container.appendChild(this.series_div);
+    };
+
+    var build_3axis_form_alternative = function build_3axis_form_alternative(container) {
+        var group_title;
+
+        // TODO 3-axis graphs (bubble charts)
+        group_title = document.createElement('h3');
+        group_title.innerHTML = 'Axis X';
+        container.appendChild(group_title);
+        this.axisx_select = new StyledElements.StyledSelect({'class': 'full'});
+        this.axisx_select.addEventListener('change', create_graph_config.bind(this));
+        container.appendChild(this.axisx_select);
+
+        group_title = document.createElement('h3');
+        group_title.innerHTML = 'Axis Y';
+        container.appendChild(group_title);
+        this.axisy_select = new StyledElements.StyledSelect({'class': 'full'});
+        this.axisy_select.addEventListener('change', create_graph_config.bind(this));
+        container.appendChild(this.axisy_select);
+
+        group_title = document.createElement('h3');
+        group_title.innerHTML = 'Size Axis';
+        container.appendChild(group_title);
+        this.axisz_select = new StyledElements.StyledSelect({'class': 'full'});
+        this.axisz_select.addEventListener('change', create_graph_config.bind(this));
+        container.appendChild(this.axisz_select);
+
+        group_title = document.createElement('h3');
+        group_title.innerHTML = 'Series field';
+        container.appendChild(group_title);
+        this.series_field_select = new StyledElements.StyledSelect({'class': 'full'});
+        this.series_field_select.addEventListener('change', create_graph_config.bind(this));
+        container.appendChild(this.series_field_select);
+
+        group_title = document.createElement('h3');
+        group_title.innerHTML = 'Name of the bubble';
+        container.appendChild(group_title);
+        this.id_bubble_select = new StyledElements.StyledSelect({'class': 'full'});
+        this.id_bubble_select.addEventListener('change', create_graph_config.bind(this));
+        container.appendChild(this.id_bubble_select);
+    };
 
     Widget.prototype.init = function init() {
         this.layout = new StyledElements.StyledNotebook({'class': 'se-notebook-crumbs'});
         this.layout.insertInto(document.body);
 
         var chart_tab = this.layout.createTab({name: "1. Chart", closable: false});
+        var data_tab = this.layout.createTab({name: "2. Data", closable: false});
+
+        // create the data selection tab
+        // The graph selection tab depends on the data selection tab, so it must be build first
+        this.data_form_alternatives = new StyledElements.StyledAlternatives();
+        data_tab.appendChild(this.data_form_alternatives);
+
+        this.normal_form_alternative = this.data_form_alternatives.createAlternative();
+        build_normal_form_alternative.call(this, this.normal_form_alternative);
+
+        this._3axis_alternative = this.data_form_alternatives.createAlternative();
+        build_3axis_form_alternative.call(this, this._3axis_alternative);
+
 
         // Create the graph selection tab
         this.graph_selector = new GraphSelector(chart_tab, function (graph_type) {
             this.current_graph_type = graph_type;
+            if (this.current_graph_type === 'bubblechart') {
+                this.data_form_alternatives.showAlternative(this._3axis_alternative);
+            } else {
+                this.data_form_alternatives.showAlternative(this.normal_form_alternative);
+            }
             create_graph_config.call(this);
         }.bind(this));
-
-        var data_tab = this.layout.createTab({name: "2. Data", closable: false});
-
-        // Create the group column title
-        var group_title = document.createElement('h3');
-        group_title.innerHTML = 'Group Column (Axis 1)';
-        data_tab.appendChild(group_title);
-
-        // Create the group column select
-        this.group_axis_select = new StyledElements.StyledSelect({'class': 'full'});
-        this.group_axis_select.addEventListener('change', create_graph_config.bind(this));
-        data_tab.appendChild(this.group_axis_select);
-
-        // Create the series title
-        var series_title = document.createElement('h3');
-        series_title.innerHTML = 'Series (Axis 2)';
-        data_tab.appendChild(series_title);
-
-        // Create the div where the series will be inserted
-        this.series_div = document.createElement('div');
-        data_tab.appendChild(this.series_div);
 
         // Repaint the layout (needed)
         this.layout.repaint();
@@ -108,34 +150,61 @@ window.Widget = (function () {
      *  PRIVATE METHODS
      * ================================================================================== */
 
-    var create_graph_config = function create_graph_config() {
-
+    var get_general_series = function get_general_series() {
         var series_checkboxes = document.getElementsByName('series');
+        var i;
         var series = [];
 
         //Get the selected checkboxes
-        for (var i = 0; i < series_checkboxes.length; i++) {
+        for (i = 0; i < series_checkboxes.length; i++) {
             if (series_checkboxes[i].checked) {
                 series.push(series_checkboxes[i].value);
             }
         }
+
+        return series;
+    };
+
+    var get_bubble_series = function get_bubble_series() {
+        var series_field = this.series_field_select.getValue();
+        var series = {};
+        var row;
+
+        for (var i = 0; i < this.dataset.data.length; i++) {
+            row = this.dataset.data[i];
+            series[row[series_field]] = true;
+        }
+
+        return Object.keys(series);
+    };
+
+    var create_graph_config = function create_graph_config() {
+        var series;
+
+        if (this.current_graph_type === 'bubblechart') {
+            series = get_bubble_series.call(this);
+        } else {
+            series = get_general_series.call(this);
+        }
+
         if (series.length > 0) {
-            create_flotr2_config.call(this, series);
-            create_google_charts_config.call(this, series);
+            if (MashupPlatform.wiring.getReachableEndpoints('flotr2-graph-config').length > 0) {
+                create_flotr2_config.call(this, series);
+            }
+            if (MashupPlatform.wiring.getReachableEndpoints('googlecharts-graph-config').length > 0) {
+                create_google_charts_config.call(this, series);
+            }
         }
     };
 
     var create_flotr2_config = function create_flotr2_config(series) {
-
-        var i, row;
+        var i, j, row;
         var graph_type = this.current_graph_type;
         var group_column = this.group_axis_select.getValue();
         var data = {};        //Contains all the series that wil be shown in the graph
         var ticks = [];       //When string are used as group column, we need to format the values
         var series_meta = {}; //Contails the name of the datasets
-        var show_lines = (graph_type == LINES || graph_type == LINES_POINTS) ? true : false;
-        var show_points = (graph_type == POINTS || graph_type == LINES_POINTS) ? true : false;
-        var group_column_axis = graph_type == BARS ? 'yaxis' : 'xaxis';
+        var group_column_axis = (graph_type == 'bargraph') ? 'yaxis' : 'xaxis';
 
         //Group Column type
         var group_column_type = null;
@@ -157,49 +226,58 @@ window.Widget = (function () {
 
         //Create the series
         for (i = 0; i < series.length; i++) {
-
-            var serie = [];
-            var serie_name = series[i];
-
-            for (var j = 0; j < this.dataset.data.length; j++) {
-                row = this.dataset.data[j];
-                var group_column_value = row[group_column];
-
-                //Numbers codified as strings must be transformed in real JS numbers
-                //Just in case the previous widget/operator hasn't done it.
-                switch (group_column_type) {
-                case 'number':
-                    group_column_value = Number(group_column_value);
-                    break;
-                default:
-                    //Ticks should be only introduced once
-                    if (i === 0) {
-                        ticks.push([j, group_column_value]);
-                    }
-                    group_column_value = j;
-                    break;
-                }
-
-                //In the bars graph the data should be encoded the other way around
-                //Transformation into numbers is automatic since a graph should be
-                //build with numbers
-                if (graph_type === BARS) {
-                    serie.push([Number(row[serie_name]), group_column_value]);
-                } else {
-                    serie.push([group_column_value, Number(row[serie_name])]);
-                }
-            }
-
-            data[i] = serie;
+            data[i] = [];
             series_meta[i] = {
-                label: serie_name,
-                points: {show: show_points},
-                lines: {show: show_lines}
+                label: series[i]
             };
         }
 
+        if (graph_type === 'bubblechart') {
+            var axisx_field = this.axisx_select.getValue();
+            var axisy_field = this.axisy_select.getValue();
+            var axisz_field = this.axisz_select.getValue();
+            var series_field = this.series_field_select.getValue();
+
+            for (j = 0; j < this.dataset.data.length; j++) {
+                row = this.dataset.data[j];
+                var serie = row[series_field];
+                data[series.indexOf(serie)].push([Number(row[axisx_field]), Number(row[axisy_field]) , Number(row[axisz_field])]);
+            }
+        } else {
+            for (i = 0; i < series.length; i++) {
+                for (j = 0; j < this.dataset.data.length; j++) {
+                    row = this.dataset.data[j];
+                    var group_column_value = row[group_column];
+
+                    //Numbers codified as strings must be transformed in real JS numbers
+                    //Just in case the previous widget/operator hasn't done it.
+                    switch (group_column_type) {
+                    case 'number':
+                        group_column_value = Number(group_column_value);
+                        break;
+                    default:
+                        //Ticks should be only introduced once
+                        if (i === 0) {
+                            ticks.push([j, group_column_value]);
+                        }
+                        group_column_value = j;
+                        break;
+                    }
+
+                    //In the bars graph the data should be encoded the other way around
+                    //Transformation into numbers is automatic since a graph should be
+                    //build with numbers
+                    if (graph_type === 'bargraph') {
+                        data[i].push([Number(row[series[i]]), group_column_value]);
+                    } else {
+                        data[i].push([group_column_value, Number(row[series[i]])]);
+                    }
+                }
+            }
+        }
+
         //FlotR2 configuration
-        var htmltext = /*group_column_type != numeric : true : */false;
+        var htmltext = false;
         var flotr2Config = {
             config: {
                 mouse: {
@@ -223,59 +301,157 @@ window.Widget = (function () {
             tickDecimals: group_column_float ? 2 : 0
         };
 
-        //Configure the bar chart
-        if (graph_type === BARS || graph_type === COLUMNS) {
-            var horizontal = graph_type === BARS ? true : false;
+        if (['linechart', 'areachart'].indexOf(graph_type) !== -1) {
+            flotr2Config.config.lines = {
+                show: true,
+                fill: graph_type === 'areachart'
+            };
+
+        } else if (graph_type === 'radarchart') {
+            flotr2Config.config.radar = {
+                show: true
+            };
+            flotr2Config.config.grid = {
+                circular: true,
+                minorHorizontalLines: true
+            };
+
+        } else if (['columnchart', 'columnchart-stacked', 'barchart', 'barchart-stacked'].indexOf(graph_type) !== -1) {
+            var horizontal = ['barchart', 'barchart-stacked'].indexOf(graph_type) !== -1;
+            var stacked = ['columnchart-stacked', 'barchart-stacked'].indexOf(graph_type) !== -1;
 
             flotr2Config.config.bars = {
                 show: true,
                 horizontal: horizontal,
-                barWidth: 0.6,
+                stacked: stacked,
+                barWidth: 0.5,
                 lineWidth: 1,
                 shadowSize: 0
+            };
+
+        } else if (graph_type === 'bubblechart') {
+            flotr2Config.config.bubbles = {
+                show: true,
+                baseRadius: 5
+            };
+
+        } else if (graph_type === 'piechart') {
+            flotr2Config.config.pie = {
+                show: true,
+                explode: 6
             };
         }
 
         MashupPlatform.wiring.pushEvent('flotr2-graph-config', JSON.stringify(flotr2Config));
     };
 
-    var create_google_charts_config = function create_google_charts_config(series) {
+    var parse_google_data = function parse_google_data(column, value) {
+        if (this.column_info[column].type === 'number') {
+            return Number(value);
+        } else {
+            return value;
+        }
+    };
 
+    var create_google_charts_config = function create_google_charts_config(series) {
         var i, j, dataset_row, row;
         var graph_type = this.current_graph_type;
         var group_column = this.group_axis_select.getValue();
         var data = [];        //Contains all the series that wil be shown in the graph
-        //var show_points = (graph_type == POINTS || graph_type == LINES_POINTS) ? true : false;
 
         // Format data
-        data.push([group_column].concat(series)); // Modificar series
-        for (i = 0; i < this.dataset.data.length; i++) {
-            dataset_row = this.dataset.data[i];
-            row = [dataset_row[group_column]];
-            for (j = 0; j < series.length; j++) {
-                row.push(dataset_row[series[j]]);
+        if (graph_type === 'bubblechart') {
+            var axisx_field = this.axisx_select.getValue();
+            var axisy_field = this.axisy_select.getValue();
+            var axisz_field = this.axisz_select.getValue();
+            var series_field = this.series_field_select.getValue();
+            var id_bubble = this.id_bubble_select.getValue();
+
+            // Header
+            data.push([id_bubble, axisx_field, axisy_field, series_field, axisz_field]);
+            // Data
+            for (j = 0; j < this.dataset.data.length; j++) {
+                row = this.dataset.data[j];
+                var serie = row[series_field];
+                data.push([row[id_bubble], Number(row[axisx_field]), Number(row[axisy_field]), serie, Number(row[axisz_field])]);
             }
-            data.push(row);
+        } else {
+            data.push([group_column].concat(series));
+            for (i = 0; i < this.dataset.data.length; i++) {
+                dataset_row = this.dataset.data[i];
+                row = [parse_google_data.call(this, group_column, dataset_row[group_column])];
+                for (j = 0; j < series.length; j++) {
+                    row.push(parse_google_data.call(this, series[j], dataset_row[series[j]]));
+                }
+                data.push(row);
+            }
         }
 
-        // Google Charts configuration
+        // Google Charts base configuration
         var googlechartsConfig = {
-            type: GOOGLECHARTS_TYPE_MAPPING[graph_type],
             options: {},
             data: data
         };
 
-        //Configure the bar chart
-        if (graph_type === LINES_POINTS) {
-            googlechartsConfig.options.pointSize = 3;
+        // Chart specific configurations
+        if (['linechart', 'linechart-smooth'].indexOf(graph_type) !== -1) {
+            googlechartsConfig.type = 'LineChart';
+            if (graph_type === 'linechart-smooth') {
+                googlechartsConfig.options.curveType = 'function';
+            }
+
+        } else if (graph_type === 'combochart') {
+            // TODO
+            googlechartsConfig.type = 'ComboChart';
+            googlechartsConfig.options.seriesType = 'bars';
+            googlechartsConfig.options.series =  googlechartsConfig.type = 'line';
+            // END TODO
+
+        } else if (['areachart', 'areachart-stacked'].indexOf(graph_type) !== -1) {
+            googlechartsConfig.type = 'AreaChart';
+            googlechartsConfig.options.isStacked = graph_type === 'areachart-stacked';
+
+        } else if (graph_type === 'steppedareachart') {
+            googlechartsConfig.type = 'SteppedAreaChart';
+
+        } else if (['columnchart', 'columnchart-stacked'].indexOf(graph_type) !== -1) {
+            googlechartsConfig.type = 'ColumnChart';
+            googlechartsConfig.options.isStacked = graph_type === 'columnchart-stacked';
+
+        } else if (['barchart', 'barchart-stacked'].indexOf(graph_type) !== -1) {
+            googlechartsConfig.type = 'BarChart';
+            googlechartsConfig.options.isStacked = graph_type === 'barchart-stacked';
+
+        } else if (graph_type === 'histogram') {
+            googlechartsConfig.type = 'Histogram';
+
+        } else if (graph_type === 'scatterchart') {
+            googlechartsConfig.type = 'ScatterChart';
+
+        } else if (graph_type === 'bubblechart') {
+            googlechartsConfig.type = 'BubbleChart';
+            googlechartsConfig.options.bubble = {textStyle: {fontSize: 11}};
+
+        } else if (['piechart', 'piechart-3d', 'donutchart'].indexOf(graph_type) !== -1) {
+            googlechartsConfig.type = 'PieChart';
+            googlechartsConfig.options.is3D = graph_type === 'piechart-3d';
+            if (graph_type === 'donutchart') {
+                googlechartsConfig.options.pieHole = 0.5;
+            }
+
+        } else if (['geochart', 'geochart-markers'].indexOf(graph_type) !== -1) {
+            googlechartsConfig.type = 'GeoChart';
+            if (graph_type === 'geochart-markers') {
+                googlechartsConfig.displayMode = 'markers';
+            }
         }
 
         MashupPlatform.wiring.pushEvent('googlecharts-graph-config', JSON.stringify(googlechartsConfig));
     };
 
     var showSeriesInfo = function showSeriesInfo(dataset_json) {
-
         this.dataset = JSON.parse(dataset_json);
+        this.column_info = {};
 
         // Fields Name
         var fields = [];
@@ -284,6 +460,7 @@ window.Widget = (function () {
             if (id !== '_id') {
                 fields.push(id);
             }
+            this.column_info[id] = this.dataset.structure[i];
         }
 
         // Create the elements in the selector
@@ -295,10 +472,27 @@ window.Widget = (function () {
         this.group_axis_select.clear();
         this.group_axis_select.addEntries(entries);
 
+        // TODO
+        this.axisx_select.clear();
+        this.axisx_select.addEntries(entries);
+        this.axisy_select.clear();
+        this.axisy_select.addEntries(entries);
+        this.axisz_select.clear();
+        this.axisz_select.addEntries(entries);
+        this.series_field_select.clear();
+        this.series_field_select.addEntries(entries);
+        this.id_bubble_select.clear();
+        this.id_bubble_select.addEntries(entries);
+        // END TODO
+
         // Add the series
         this.series_div.innerHTML = '';
         for (i = 0; i < fields.length; i++) {
 
+            /* TODO check if this make sense */
+            if (this.column_info[fields[i]].type !== 'number') {
+                continue;
+            }
             var label = document.createElement('label');
 
             var checkbox = document.createElement('input');
