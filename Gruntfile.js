@@ -164,6 +164,7 @@ module.exports = function (grunt) {
                     helpers: ['src/test/helpers/*.js'],
                     vendor: ['bower_components/jquery/dist/jquery.js',
                         'node_modules/jasmine-jquery/lib/jasmine-jquery.js',
+                        'bower_components/mock-applicationmashup/lib/vendor/mockMashupPlatform.js',
                         'src/test/vendor/*.js']
                 }
             },

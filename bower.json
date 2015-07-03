@@ -4,9 +4,10 @@
   "exportsOverride": {
     "jquery": {
       "js": "dist/jquery.min.js"
-    }
+    },
   },
   "devDependencies": {
-    "jasmine-jquery": "2.0.6"
+    "jasmine-jquery": "2.0.6",
+    "mock-applicationmashup": "~0.0.8"
   }
 }

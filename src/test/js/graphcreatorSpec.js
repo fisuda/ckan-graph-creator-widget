@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-/* global $ */
+/* global $, MockMP */
 
 
 (function () {
@@ -45,14 +45,15 @@
         return null;
     };
 
+    window.MashupPlatform = new MockMP.MockMP();
+
     describe("CKAN Graph Creator widget", function () {
 
         var widget = null;
 
+
         beforeEach(function () {
             loadFixtures('index.html');
-            MashupPlatform.wiring.registerCallback.calls.reset();
-            MashupPlatform.widget.context.registerCallback.calls.reset();
 
             widget = new Widget();
             widget.init();
@@ -60,6 +61,7 @@
         });
 
         afterEach(function () {
+            MashupPlatform.reset();
             clearDocument();
         });
 
