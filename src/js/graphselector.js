@@ -100,19 +100,22 @@
         element.appendChild(this.subcontainer);
 
         for (var i = 0; i < graph_types.length; i++) {
-
-            var newImage = document.createElement('img');
-            newImage.className = "graph-button " + graph_types[i];
-            newImage.setAttribute("src", "images/" + graph_types[i] + ".png");
-
-            build_graph_subtypes.call(this, onclick, graph_types[i]);
-            newImage.addEventListener("click", display_graph_subtypes.bind(this, graph_types[i]));
-
-            this.container.appendChild(newImage);
+            this.container.appendChild(build_image_graph_types.call(this, graph_types[i], onclick));
         }
 
         display_graph_subtypes.call(this, 'lineargraph');
         on_graphsubtype_click.call(this, onclick, 'linechart');
+    };
+
+    var build_image_graph_types = function build_image_graph_types(graph_types, onclick) {
+        var newImage = document.createElement('img');
+        newImage.className = "graph-button " + graph_types;
+        newImage.setAttribute("src", "images/" + graph_types + ".png");
+
+        build_graph_subtypes.call(this, onclick, graph_types);
+        newImage.addEventListener("click", display_graph_subtypes.bind(this, graph_types));
+
+        return newImage;
     };
 
     var build_graph_subtypes = function build_graph_subtypes(onclick, id) {
@@ -122,14 +125,19 @@
         subtype_container.className = id;
 
         for (var i = 0; i < graph.subtypes.length; i++) {
-            var newImage = document.createElement('img');
-            newImage.className = "graph-button " + graph.subtypes[i].id;
-            newImage.setAttribute("src", "images/subtypes/" + graph.subtypes[i].id + ".png");
-            newImage.addEventListener("click", on_graphsubtype_click.bind(this, onclick, graph.subtypes[i].id), true);
-
-            subtype_container.appendChild(newImage);
+            subtype_container.appendChild(build_image_graph_subtypes.call(this, graph.subtypes[i], onclick));
         }
         this.subcontainer.appendChild(subtype_container);
+    };
+
+    var build_image_graph_subtypes = function build_image_graph_subtypes(subtype, onclick) {
+        var newImage = document.createElement('img');
+        newImage.className = "graph-button " + subtype.id;
+        newImage.setAttribute("src", "images/subtypes/" + subtype.id + ".png");
+
+        newImage.addEventListener("click", on_graphsubtype_click.bind(this, onclick, subtype.id), true);
+
+        return newImage;
     };
 
     var display_graph_subtypes = function display_graph_subtypes(id) {
