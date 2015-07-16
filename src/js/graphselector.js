@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+/* global StyledElements */
+
 
 (function () {
 
@@ -34,17 +36,17 @@
             label: 'Linear Graph',
             subtypes: [
                 {id: 'linechart', label: "Line Chart"},
-                {id: 'linechart-smooth', label: "Smoothed Lines Chart"},
-                {id: 'combochart', label: "Combo Chart"},
-                {id: 'radarchart', label: "Radar Chart"}
+                {id: 'linechart-smooth', label: "Smoothed Lines Chart", title: "Just works on Google Chart"},
+                {id: 'combochart', label: "Combo Chart", title: "Just works on Google Chart"},
+                {id: 'radarchart', label: "Radar Chart", title: "Just works on Flotr2 Graph"}
             ]
         },
         areagraph: {
             label: 'Area Graph',
             subtypes: [
                 {id: 'areachart', label: "Area Chart"},
-                {id: 'areachart-stacked', label: "Area Chart Stacked"},
-                {id: 'steppedareachart', label: "Stepped Area Chart"}
+                {id: 'areachart-stacked', label: "Area Chart Stacked", title: "Just works on Google Chart"},
+                {id: 'steppedareachart', label: "Stepped Area Chart", title: "Just works on Google Chart"}
             ]
         },
         columngraph: {
@@ -52,7 +54,7 @@
             subtypes: [
                 {id: 'columnchart', label: "Column Chart"},
                 {id: 'columnchart-stacked', label: "Column Chart Stacked"},
-                {id: 'histogram', label: "Histogram"}
+                {id: 'histogram', label: "Histogram", title: "Just works on Google Chart"}
             ]
         },
          bargraph: {
@@ -65,7 +67,7 @@
          scattergraph: {
             label: 'Scatter Graph',
             subtypes: [
-                {id: 'scatterchart', label: "Scatter Chart"},
+                {id: 'scatterchart', label: "Scatter Chart", title: "Just works on Google Chart"},
                 {id: 'bubblechart', label: "Bubble Chart"}
             ]
         },
@@ -73,15 +75,15 @@
             label: 'Pie Graph',
             subtypes: [
                 {id: 'piechart', label: "Pie Chart"},
-                {id: 'piechart-3d', label: "Pie Chart 3D"},
-                {id: 'donutchart', label: "Donut Chart"}
+                {id: 'piechart-3d', label: "Pie Chart 3D", title: "Just works on Google Chart"},
+                {id: 'donutchart', label: "Donut Chart", title: "Just works on Google Chart"}
             ]
         },
         geograph: {
             label: 'Geo Graph',
             subtypes: [
-                {id: 'geochart', label: "Geo Chart"},
-                {id: 'geochart-markers', label: "Geo Chart Markers"}
+                {id: 'geochart', label: "Geo Chart", title: "Just works on Google Chart"},
+                {id: 'geochart-markers', label: "Geo Chart Markers", title: "Just works on Google Chart"}
             ]
         }
     };
@@ -134,6 +136,13 @@
         var newImage = document.createElement('img');
         newImage.className = "graph-button " + subtype.id;
         newImage.setAttribute("src", "images/subtypes/" + subtype.id + ".png");
+
+        if (subtype.title) {
+            var tooltip = new StyledElements.Tooltip({
+                content: subtype.title, placement: ['right', 'bottom', 'left', 'top']
+            });
+            tooltip.bind(newImage);
+        }
 
         newImage.addEventListener("click", on_graphsubtype_click.bind(this, onclick, subtype.id), true);
 
