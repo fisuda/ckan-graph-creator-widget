@@ -130,10 +130,18 @@ window.Widget = (function () {
         this._3axis_alternative = this.data_form_alternatives.createAlternative();
         build_3axis_form_alternative.call(this, this._3axis_alternative);
 
-
         // Create the graph selection tab
         this.graph_selector = new GraphSelector(chart_tab, function (graph_type) {
             this.current_graph_type = graph_type;
+
+            // Check that endpoints are connected
+            if (MashupPlatform.wiring.getReachableEndpoints('flotr2-graph-config').length > 0) {
+                enable_graphs_flotr2.call(this);
+            }
+            if (MashupPlatform.wiring.getReachableEndpoints('googlecharts-graph-config').length > 0) {
+                enable_graphs_googlecharts.call(this);
+            }
+
             if (this.current_graph_type === 'bubblechart') {
                 this.data_form_alternatives.showAlternative(this._3axis_alternative);
             } else {
@@ -188,12 +196,68 @@ window.Widget = (function () {
         }
 
         if (series.length > 0) {
-            if (MashupPlatform.wiring.getReachableEndpoints('flotr2-graph-config').length > 0) {
-                create_flotr2_config.call(this, series);
-            }
-            if (MashupPlatform.wiring.getReachableEndpoints('googlecharts-graph-config').length > 0) {
-                create_google_charts_config.call(this, series);
-            }
+            create_flotr2_config.call(this, series);
+            create_google_charts_config.call(this, series);
+        }
+    };
+
+    var enable_graphs_flotr2 = function enable_graphs_flotr2() {
+        var selectorsFlotr2 = [
+            '.lineargraph',
+            '.linechart',
+            '.radarchart',
+            '.areagraph',
+            '.areachart',
+            '.columngraph',
+            '.columnchart',
+            '.columnchart-stacked',
+            '.bargraph',
+            '.barchart',
+            '.barchart-stacked',
+            '.scattergraph',
+            '.bubblechart',
+            '.piegraph',
+            '.piechart'
+        ];
+        var graphsFlotr2 = document.body.querySelectorAll(selectorsFlotr2);
+
+        for (var i = 0; i < graphsFlotr2.length; i++) {
+            graphsFlotr2[i].classList.remove("disabled");
+        }
+    };
+
+    var enable_graphs_googlecharts = function enable_graphs_googlecharts() {
+        var selectorsGoogleCharts = [
+            '.lineargraph',
+            '.linechart',
+            '.linechart-smooth',
+            '.combochart',
+            '.areagraph',
+            '.areachart',
+            '.areachart-stacked',
+            '.steppedareachart',
+            '.columngraph',
+            '.columnchart',
+            '.columnchart-stacked',
+            '.histogram',
+            '.bargraph',
+            '.barchart',
+            '.barchart-stacked',
+            '.scattergraph',
+            '.scatterchart',
+            '.bubblechart',
+            '.piegraph',
+            '.piechart',
+            '.piechart-3d',
+            '.donutchart',
+            '.geograph',
+            '.geochart',
+            '.geochart-markers'
+        ];
+        var graphsGoogle = document.body.querySelectorAll(selectorsGoogleCharts);
+
+        for (var j = 0; j < graphsGoogle.length; j++) {
+            graphsGoogle[j].classList.remove("disabled");
         }
     };
 

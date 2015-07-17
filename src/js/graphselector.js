@@ -111,7 +111,7 @@
 
     var build_image_graph_types = function build_image_graph_types(graph_types, onclick) {
         var newImage = document.createElement('img');
-        newImage.className = "graph-button " + graph_types;
+        newImage.className = "graph-button " + graph_types + " disabled";
         newImage.setAttribute("src", "images/" + graph_types + ".png");
 
         build_graph_subtypes.call(this, onclick, graph_types);
@@ -134,7 +134,7 @@
 
     var build_image_graph_subtypes = function build_image_graph_subtypes(subtype, onclick) {
         var newImage = document.createElement('img');
-        newImage.className = "graph-button " + subtype.id;
+        newImage.className = "graph-button " + subtype.id + " disabled";
         newImage.setAttribute("src", "images/subtypes/" + subtype.id + ".png");
 
         if (subtype.title) {
