@@ -7,7 +7,7 @@
     <description>A widget that allow a user what information to show in a linear graph</description>
     <longdescription>DESCRIPTION.md</longdescription>
     <homepage>https://github.com/wirecloud-fiware/ckan-graph-creator-widget</homepage>
-    <doc>doc/index.html</doc>
+    <doc>doc/index.md</doc>
     <changelog>doc/changelog.md</changelog>
   </details>
   <wiring>
