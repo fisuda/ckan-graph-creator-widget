@@ -57,14 +57,14 @@
                 {id: 'histogram', label: "Histogram", title: "Just works on Google Chart"}
             ]
         },
-         bargraph: {
+        bargraph: {
             label: 'Bar Graph',
             subtypes: [
                 {id: 'barchart', label: "Bar Chart"},
                 {id: 'barchart-stacked', label: "Bar Chart Stacked"}
             ]
         },
-         scattergraph: {
+        scattergraph: {
             label: 'Scatter Graph',
             subtypes: [
                 {id: 'scatterchart', label: "Scatter Chart", title: "Just works on Google Chart"},
