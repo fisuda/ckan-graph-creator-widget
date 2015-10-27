@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-/* global GraphSelector, MashupPlatform, StyledElements */
+/* global GraphSelector, MashupPlatform, StyledElements, $ */
 
 
 window.Widget = (function () {
@@ -134,14 +134,6 @@ window.Widget = (function () {
         this.graph_selector = new GraphSelector(chart_tab, function (graph_type) {
             this.current_graph_type = graph_type;
 
-            // Check that endpoints are connected
-            if (MashupPlatform.wiring.getReachableEndpoints('flotr2-graph-config').length > 0) {
-                enable_graphs_flotr2.call(this);
-            }
-            if (MashupPlatform.wiring.getReachableEndpoints('googlecharts-graph-config').length > 0) {
-                enable_graphs_googlecharts.call(this);
-            }
-
             if (this.current_graph_type === 'bubblechart') {
                 this.data_form_alternatives.showAlternative(this._3axis_alternative);
             } else {
@@ -150,6 +142,8 @@ window.Widget = (function () {
             create_graph_config.call(this);
         }.bind(this));
 
+        update_available_wiring.call(this);
+        MashupPlatform.wiring.registerStatusCallback(update_available_wiring.bind(this));
         // Repaint the layout (needed)
         this.layout.repaint();
     };
@@ -157,6 +151,17 @@ window.Widget = (function () {
     /* ==================================================================================
      *  PRIVATE METHODS
      * ================================================================================== */
+
+    var update_available_wiring = function update_available_wiring() {
+        // Check that endpoints are connected
+        disable_all.call(this);
+        if (MashupPlatform.widget.outputs["flotr2-graph-config"].connected) {
+            enable_graphs_flotr2.call(this);
+        }
+        if (MashupPlatform.widget.outputs['googlecharts-graph-config'].connected) {
+            enable_graphs_googlecharts.call(this);
+        }
+    };
 
     var get_general_series = function get_general_series() {
         var series_checkboxes = document.getElementsByName('series');
@@ -199,6 +204,12 @@ window.Widget = (function () {
             create_flotr2_config.call(this, series);
             create_google_charts_config.call(this, series);
         }
+    };
+
+    var disable_all = function disable_all() {
+        $(".graph-button").each(function (i, obj) {
+            obj.classList.add("disabled");
+        });
     };
 
     var enable_graphs_flotr2 = function enable_graphs_flotr2() {

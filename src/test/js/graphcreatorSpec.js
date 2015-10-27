@@ -55,6 +55,15 @@
         beforeEach(function () {
             loadFixtures('index.html');
 
+            window.MashupPlatform.widget.outputs = {
+                "flotr2-graph-config": {
+                    connected: true
+                },
+                "googlecharts-graph-config": {
+                    connected: true
+                }
+            };
+            window.MashupPlatform.wiring.registerStatusCallback = function() {};
             widget = new Widget();
             widget.init();
             spyOn(widget.layout, 'repaint').and.callThrough();

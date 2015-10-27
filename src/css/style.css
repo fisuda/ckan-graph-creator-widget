@@ -1,39 +1,47 @@
 .container-basicgraphs {
-  display: block;
-  padding: 10px 5px 10px 5px;
-  border-bottom: 1px dashed #002B67;
+    display: block;
+    padding: 10px 5px 10px 5px;
+    border-bottom: 1px dashed #002B67;
 }
 
 .graph-button {
-  position: relative;
-  display: inline-block;
-  border: 3px solid #eee;
-  margin: 4px 4px 4px 4px;
-  height: 48px;
-  width: 70px;
+    position: relative;
+    display: inline-block;
+    border: 3px solid #eee;
+    margin: 4px 4px 4px 4px;
+    height: 48px;
+    width: 70px;
+}
+
+.graph-button:hover {
+    cursor: pointer;
+}
+
+.graph-button.disabled:hover {
+    cursor: default;
 }
 
 .graph-button.active {
-  border: 3px solid #002B67;
+    border: 3px solid #002B67;
 }
 
 .container-subgraphs {
-  display: block;
-  padding: 10px 5px 10px 5px;
+    display: block;
+    padding: 10px 5px 10px 5px;
 }
 
 .container-subgraphs > div {
-  display: none;
+    display: none;
 }
 
 .container-subgraphs > div.active {
-  display: block;
+    display: block;
 }
 
 .disabled {
-  -webkit-filter: grayscale(100%);
-  -moz-filter: grayscale(100%);
-  -o-filter: grayscale(100%);
-  -ms-filter: grayscale(100%);
-  filter: grayscale(100%);
+    -webkit-filter: grayscale(100%);
+    -moz-filter: grayscale(100%);
+    -o-filter: grayscale(100%);
+    -ms-filter: grayscale(100%);
+    filter: grayscale(100%);
 }

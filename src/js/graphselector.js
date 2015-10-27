@@ -149,8 +149,12 @@
         return newImage;
     };
 
-    var display_graph_subtypes = function display_graph_subtypes(id) {
+    var display_graph_subtypes = function display_graph_subtypes(id, event) {
         var i;
+
+        if (event != null && event.target.classList.contains("disabled")) {
+            return;
+        }
 
         // Manage the graph type
         // Remove old active element in graph container
@@ -175,7 +179,11 @@
         new_active_element.classList.add("active");
     };
 
-    var on_graphsubtype_click = function on_graphsubtype_click(onclick, graph_subtype) {
+    var on_graphsubtype_click = function on_graphsubtype_click(onclick, graph_subtype, event) {
+        if (event != null && event.target.classList.contains("disabled")) {
+            return;
+        }
+
         // Manage the subtype container
         var old_active_element = this.subcontainer.querySelectorAll('.graph-button.active');
         for (var i = 0; i < old_active_element.length; i++) {

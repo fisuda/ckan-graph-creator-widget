@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<widget xmlns="http://wirecloud.conwet.fi.upm.es/ns/macdescription/1" vendor="CoNWeT" name="ckan-graph-creator" version="1.0.1">
+<widget xmlns="http://wirecloud.conwet.fi.upm.es/ns/macdescription/1" vendor="CoNWeT" name="ckan-graph-creator" version="1.0.2">
   <details>
     <title>CKAN Graph creator</title>
     <authors>Aitor Magán &lt;amagan@conwet.com&gt;</authors>
@@ -10,6 +10,9 @@
     <doc>doc/index.md</doc>
     <changelog>doc/changelog.md</changelog>
   </details>
+  <requirements>
+    <feature name="DashboardManagement"/>
+  </requirements>
   <wiring>
     <outputendpoint name="flotr2-graph-config" type="text" label="Flotr2 Configuration" description="The configuration of your flotr2 graph" friendcode="flotr2-graph-data" />
     <outputendpoint name="googlecharts-graph-config" type="text" label="Google Charts Configuration" description="The configuration of your Google Charts graph" friendcode="google-charts-data" />
