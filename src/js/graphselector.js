@@ -36,17 +36,17 @@
             label: 'Linear Graph',
             subtypes: [
                 {id: 'linechart', label: "Line Chart"},
-                {id: 'linechart-smooth', label: "Smoothed Lines Chart", title: "Just works on Google Chart"},
-                {id: 'combochart', label: "Combo Chart", title: "Just works on Google Chart"},
-                {id: 'radarchart', label: "Radar Chart", title: "Just works on Flotr2 Graph"}
+                {id: 'linechart-smooth', label: "Smoothed Lines Chart"}, // , title: "Just works on Google Chart"},
+                {id: 'combochart', label: "Combo Chart"}, // , title: "Just works on Google Chart"},
+                {id: 'radarchart', label: "Radar Chart"}, // , title: "Just works on Flotr2 Graph"}
             ]
         },
         areagraph: {
             label: 'Area Graph',
             subtypes: [
                 {id: 'areachart', label: "Area Chart"},
-                {id: 'areachart-stacked', label: "Area Chart Stacked", title: "Just works on Google Chart"},
-                {id: 'steppedareachart', label: "Stepped Area Chart", title: "Just works on Google Chart"}
+                {id: 'areachart-stacked', label: "Area Chart Stacked"}, // , title: "Just works on Google Chart"},
+                {id: 'steppedareachart', label: "Stepped Area Chart"}, // , title: "Just works on Google Chart"}
             ]
         },
         columngraph: {
@@ -54,7 +54,7 @@
             subtypes: [
                 {id: 'columnchart', label: "Column Chart"},
                 {id: 'columnchart-stacked', label: "Column Chart Stacked"},
-                {id: 'histogram', label: "Histogram", title: "Just works on Google Chart"}
+                {id: 'histogram', label: "Histogram"}, // , title: "Just works on Google Chart"}
             ]
         },
         bargraph: {
@@ -67,7 +67,7 @@
         scattergraph: {
             label: 'Scatter Graph',
             subtypes: [
-                {id: 'scatterchart', label: "Scatter Chart", title: "Just works on Google Chart"},
+                {id: 'scatterchart', label: "Scatter Chart"}, // , title: "Just works on Google Chart"},
                 {id: 'bubblechart', label: "Bubble Chart"}
             ]
         },
@@ -75,15 +75,15 @@
             label: 'Pie Graph',
             subtypes: [
                 {id: 'piechart', label: "Pie Chart"},
-                {id: 'piechart-3d', label: "Pie Chart 3D", title: "Just works on Google Chart"},
-                {id: 'donutchart', label: "Donut Chart", title: "Just works on Google Chart"}
+                {id: 'piechart-3d', label: "Pie Chart 3D"}, // , title: "Just works on Google Chart"},
+                {id: 'donutchart', label: "Donut Chart"}, // , title: "Just works on Google Chart"}
             ]
         },
         geograph: {
             label: 'Geo Graph',
             subtypes: [
-                {id: 'geochart', label: "Geo Chart", title: "Just works on Google Chart"},
-                {id: 'geochart-markers', label: "Geo Chart Markers", title: "Just works on Google Chart"}
+                {id: 'geochart', label: "Geo Chart"}, // , title: "Just works on Google Chart"},
+                {id: 'geochart-markers', label: "Geo Chart Markers"}, // , title: "Just works on Google Chart"}
             ]
         }
     };
@@ -150,22 +150,27 @@
     };
 
     var display_graph_subtypes = function display_graph_subtypes(id, event) {
-        var i;
-
         if (event != null && event.target.classList.contains("disabled")) {
             return;
         }
 
+        var i;
         // Manage the graph type
         // Remove old active element in graph container
-        var old_graph_active_elements = this.container.querySelectorAll('.active');
-        for (i = 0; i < old_graph_active_elements.length; i++) {
-            old_graph_active_elements[i].classList.remove("active");
+        // var old_graph_active_elements = this.container.querySelectorAll('.active');
+        // for (i = 0; i < old_graph_active_elements.length; i++) {
+        //     old_graph_active_elements[i].classList.remove("active");
+        // }
+
+        var old_graph_selected_elements = this.container.querySelectorAll('.selected');
+        for (i = 0; i < old_graph_selected_elements.length; i++) {
+            old_graph_selected_elements[i].classList.remove("selected");
         }
 
         // Add new active element in graph container
         var new_graph_active_element = this.container.querySelector('.' + id);
-        new_graph_active_element.classList.add("active");
+        new_graph_active_element.classList.add("selected");
+        // new_graph_active_element.classList.add("active");
 
         // Manage the subtype container
         // Remove old active element in subtype container
@@ -177,6 +182,7 @@
         // Add old active element in subtype container
         var new_active_element = this.subcontainer.querySelector('div.' + id);
         new_active_element.classList.add("active");
+        // new_active_element.classList.add("selected");
     };
 
     var on_graphsubtype_click = function on_graphsubtype_click(onclick, graph_subtype, event) {
@@ -184,9 +190,22 @@
             return;
         }
 
+        var i;
+
+        // Remove old active element in graph container
+        var old_graph_active_elements = this.container.querySelectorAll('.active');
+        for (i = 0; i < old_graph_active_elements.length; i++) {
+            old_graph_active_elements[i].classList.remove("active");
+        }
+
+        var selected_to_active = this.container.querySelectorAll('.graph-button.selected');
+        for (i = 0; i < selected_to_active.length; i++) {
+            selected_to_active[i].classList.add("active");
+        }
+
         // Manage the subtype container
         var old_active_element = this.subcontainer.querySelectorAll('.graph-button.active');
-        for (var i = 0; i < old_active_element.length; i++) {
+        for (i = 0; i < old_active_element.length; i++) {
             old_active_element[i].classList.remove("active");
         }
 

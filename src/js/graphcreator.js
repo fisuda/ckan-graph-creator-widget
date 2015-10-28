@@ -32,12 +32,15 @@ window.Widget = (function () {
         this.current_graph_type = null;
         this.group_axis_select = null;
         this.series_div = null;
-        this.dataset = null;     //The dataset to be used. {structure: {...}, data: {...}}
+        this.dataset = null;     //The dataset to be used. {structure: {...}, data: {...}, metadata: {...}}
         this.column_info = null;
         this._3axis_alternative = null;
 
         // Recieve events for the "dataset" input endpoint
-        MashupPlatform.wiring.registerCallback('dataset', showSeriesInfo.bind(this));
+        MashupPlatform.wiring.registerCallback('dataset', function (data) {
+            this.data_tab.enable();
+            showSeriesInfo.call(this, data);
+        }.bind(this));
 
         // Repaint on size change
         MashupPlatform.widget.context.registerCallback(function (changes) {
@@ -112,17 +115,125 @@ window.Widget = (function () {
         container.appendChild(this.id_bubble_select);
     };
 
+
+    var showMsg = function showMsg(msg, type, callback) {
+        var alertDiv = document.getElementById("alert");
+
+        if (type.toLowerCase() == "warning") {
+            alertDiv.innerHTML = "<strong>Warning: </strong>" + msg;
+            alertDiv.className += " alert-warning";
+        }else if (type.toLowerCase() == "success") {
+            alertDiv.innerHTML = "";
+            alertDiv.appendChild(document.createTextNode(msg));
+            alertDiv.className += " alert-success";
+        }
+
+        setTimeout(function () {
+            alertDiv.className = "alert";
+            if (callback) {
+                callback.call(this);
+            }
+        }, 2000);
+    };
+
+    var createWorkspace = function createWorkspace() {
+        var resource = this.dataset.metadata.id;
+
+        var preferences = {
+            graph_type: this.current_graph_type,
+            graph_fields: {
+                group_column: this.group_axis_select.getValue()
+            },
+            graph_series: [],
+            resource: resource
+        };
+
+        if (preferences.graph_type === 'bubblechart') {
+            preferences.graph_fields.axisx_field = this.axisx_select.getValue();
+            preferences.graph_fields.axisy_field = this.axisy_select.getValue();
+            preferences.graph_fields.axisz_field = this.axisz_select.getValue();
+            preferences.graph_fields.series_field = this.series_field_select.getValue();
+            preferences.graph_fields.id_bubble = this.id_bubble_select.getValue();
+            preferences.graph_series = get_bubble_series.call(this);
+
+        }else {
+            preferences.graph_series = get_general_series.call(this);
+        }
+
+        //We check that there are no fields unfinished
+        if (preferences.graph_series.length === 0) {
+            showMsg.call(this, "Can not create dashboard, a required field is empty.", "warning");
+            return;
+        }
+
+        for (var field in preferences.graph_fields) {
+            if (preferences.graph_fields[field] == null) {
+                showMsg.call(this, "Can not create dashboard, a required field is empty.", "warning");
+                return;
+            }
+        }
+
+        //Convert the preferences that are not text to JSON
+        preferences.graph_series = JSON.stringify(preferences.graph_series);
+        preferences.graph_fields = JSON.stringify(preferences.graph_fields);
+
+        var name = document.getElementById("dashboard_name").value;
+
+        MashupPlatform.mashup.createWorkspace({
+            name: name,
+            mashup: 'CoNWeT/ckan-wirecloud-view/1.0',
+            preferences: preferences,
+            onSuccess: function (workspace) {
+                showMsg.call(this, "Dashboard " + workspace.title + " created successfully.");
+            },
+            onFailure: function (msg) {
+                MashupPlatform.widget.log("Could not create the workspace:\n " + msg);
+                showMsg.call(this, "Could not create the workspace:<br/>" + msg, "warning");
+            }
+        });
+    };
+
     Widget.prototype.init = function init() {
         this.layout = new StyledElements.StyledNotebook({'class': 'se-notebook-crumbs'});
         this.layout.insertInto(document.body);
 
         var chart_tab = this.layout.createTab({name: "1. Chart", closable: false});
-        var data_tab = this.layout.createTab({name: "2. Data", closable: false});
+        this.data_tab = this.layout.createTab({name: "2. Data", closable: false});
+        this.workspace_tab = this.layout.createTab({name: "3. Dashboard", closable: false});
+        this.data_tab.disable();
+        this.workspace_tab.disable();
+
+        var mashup_panel = document.createElement('div');
+        mashup_panel.className = "mashup_panel";
+        var temp_p = document.createElement('p');
+        temp_p.style = "margin-bottom: 10px";
+        temp_p.appendChild(document.createTextNode("If you have finished, you can create a new dashboard now."));
+        mashup_panel.appendChild(temp_p);
+
+        var temp_d = document.createElement("div");
+        temp_d.appendChild(document.createTextNode("Name:  "));
+
+        var name_input = document.createElement("input");
+        name_input.type = "text";
+        name_input.value = "CKAN Wirecloud View";
+        name_input.className = "se-text-field";
+        name_input.id = "dashboard_name";
+
+        temp_d.appendChild(name_input);
+
+        mashup_panel.appendChild(temp_d);
+
+        var createButton = new StyledElements.StyledButton({text: 'Create dashboard', class: 'btn-primary'});
+        createButton.insertInto(mashup_panel);
+
+        this.workspace_tab.appendChild(mashup_panel);
+
+        createButton.addEventListener("click", createWorkspace.bind(this));
 
         // create the data selection tab
         // The graph selection tab depends on the data selection tab, so it must be build first
         this.data_form_alternatives = new StyledElements.StyledAlternatives();
-        data_tab.appendChild(this.data_form_alternatives);
+        this.data_tab.appendChild(this.data_form_alternatives);
 
         this.normal_form_alternative = this.data_form_alternatives.createAlternative();
         build_normal_form_alternative.call(this, this.normal_form_alternative);
@@ -201,6 +312,7 @@ window.Widget = (function () {
         }
 
         if (series.length > 0) {
+            this.workspace_tab.enable();
             create_flotr2_config.call(this, series);
             create_google_charts_config.call(this, series);
         }
