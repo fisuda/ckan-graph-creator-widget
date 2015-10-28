@@ -137,7 +137,12 @@ window.Widget = (function () {
     };
 
     var createWorkspace = function createWorkspace() {
+        if (this.dataset.metadata == null || this.dataset.metadata.id == null || this.dataset.metadata.ckan_server == null) {
+            showMsg.call(this, "The data received don't have metadata,  I can't create the workspace", "warning");
+        }
+
         var resource = this.dataset.metadata.id;
+        var ckan_server = this.dataset.metadata.ckan_server;
 
         var preferences = {
             graph_type: this.current_graph_type,
@@ -145,7 +150,8 @@ window.Widget = (function () {
                 group_column: this.group_axis_select.getValue()
             },
             graph_series: [],
-            resource: resource
+            resource: resource,
+            ckan_server: ckan_server
         };
 
         if (preferences.graph_type === 'bubblechart') {
@@ -185,11 +191,11 @@ window.Widget = (function () {
             preferences: preferences,
             onSuccess: function (workspace) {
                 showMsg.call(this, "Dashboard " + workspace.title + " created successfully.");
-            },
+            }.bind(this),
             onFailure: function (msg) {
                 MashupPlatform.widget.log("Could not create the workspace:\n " + msg);
                 showMsg.call(this, "Could not create the workspace:<br/>" + msg, "warning");
-            }
+            }.bind(this)
         });
     };
 
