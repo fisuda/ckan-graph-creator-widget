@@ -136,7 +136,7 @@ window.Widget = (function () {
         }, 2000);
     };
 
-    var createWorkspace = function createWorkspace() {
+    var createWorkspace = function createWorkspace(mashupname) {
         if (this.dataset.metadata == null || this.dataset.metadata.id == null || this.dataset.metadata.ckan_server == null) {
             showMsg.call(this, "The data received don't have metadata,  I can't create the workspace", "warning");
         }
@@ -187,15 +187,17 @@ window.Widget = (function () {
 
         MashupPlatform.mashup.createWorkspace({
             name: name,
-            mashup: 'CoNWeT/ckan-wirecloud-view/1.0',
+            mashup: 'CoNWeT/' + mashupname + '/1.0.0',
             preferences: preferences,
             onSuccess: function (workspace) {
-                showMsg.call(this, "Dashboard " + workspace.title + " created successfully.");
-            }.bind(this),
+                var msg = "Dashboard " + workspace.name + " created successfully.";
+                MashupPlatform.widget.log(msg, MashupPlatform.log.INFO);
+                showMsg(msg, "success");
+            },
             onFailure: function (msg) {
                 MashupPlatform.widget.log("Could not create the workspace:\n " + msg);
-                showMsg.call(this, "Could not create the workspace:<br/>" + msg, "warning");
-            }.bind(this)
+                showMsg("Could not create the workspace:<br/>" + msg, "warning");
+            }
         });
     };
 
@@ -229,12 +231,23 @@ window.Widget = (function () {
 
         mashup_panel.appendChild(temp_d);
 
-        var createButton = new StyledElements.StyledButton({text: 'Create dashboard', class: 'btn-primary'});
-        createButton.insertInto(mashup_panel);
+        var createGoogleButton = new StyledElements.StyledButton({text: 'Create dashboard with Google Graph', class: 'btn-primary'});
+        createGoogleButton.insertInto(mashup_panel);
 
         this.workspace_tab.appendChild(mashup_panel);
 
-        createButton.addEventListener("click", createWorkspace.bind(this));
+        createGoogleButton.addEventListener("click", function () {
+            createWorkspace.call(this, "CKAN Wirecloud Google View");
+        }.bind(this));
+
+        var createFlotrButton = new StyledElements.StyledButton({text: 'Create dashboard with flotr Graph', class: 'btn-primary'});
+        createFlotrButton.insertInto(mashup_panel);
+
+        this.workspace_tab.appendChild(mashup_panel);
+
+        createFlotrButton.addEventListener("click", function () {
+            createWorkspace.call(this, "CKAN Wirecloud flotr2 view");
+        }.bind(this));
 
         // create the data selection tab
         // The graph selection tab depends on the data selection tab, so it must be build first
