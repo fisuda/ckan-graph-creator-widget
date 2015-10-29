@@ -136,6 +136,36 @@ window.Widget = (function () {
         }, 2000);
     };
 
+    var enable_mashup_buttons = function enable_mashup_buttons() {
+        var elements = this.graph_selector.subcontainer.querySelectorAll(".graph-button.active");
+        if (elements.length != 1) {
+            window.console.log("Error");
+        }
+        var elementtype = "." + elements[0].classList[1];
+        var searchIn = function searchIn(list, elem) {
+            var i;
+            for (i = 0; i < list.length; i++) {
+                if (elem === list[i]) {
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        var googleHave = searchIn(selectorsGoogleCharts, elementtype);
+        var flotr2Have = searchIn(selectorsFlotr2, elementtype);
+
+        this.googleButton.disable();
+        this.flotr2Button.disable();
+        if (googleHave) {
+            this.googleButton.enable();
+        }
+
+        if (flotr2Have) {
+            this.flotr2Button.enable();
+        }
+    };
+
     var createWorkspace = function createWorkspace(mashupname) {
         if (this.dataset.metadata == null || this.dataset.metadata.id == null || this.dataset.metadata.ckan_server == null) {
             showMsg.call(this, "The data received don't have metadata,  I can't create the workspace", "warning");
@@ -210,6 +240,7 @@ window.Widget = (function () {
         this.workspace_tab = this.layout.createTab({name: "3. Dashboard", closable: false});
         this.data_tab.disable();
         this.workspace_tab.disable();
+        this.workspace_tab.getTabElement().addEventListener("click", enable_mashup_buttons.bind(this), false);
 
         var mashup_panel = document.createElement('div');
         mashup_panel.className = "mashup_panel";
@@ -231,23 +262,27 @@ window.Widget = (function () {
 
         mashup_panel.appendChild(temp_d);
 
-        var createGoogleButton = new StyledElements.StyledButton({text: 'Create dashboard with Google Graph', class: 'btn-primary'});
-        createGoogleButton.insertInto(mashup_panel);
+        this.googleButton = new StyledElements.StyledButton({text: 'Create dashboard with Google Graph', class: 'btn-primary'});
+        this.googleButton.insertInto(mashup_panel);
 
         this.workspace_tab.appendChild(mashup_panel);
 
-        createGoogleButton.addEventListener("click", function () {
+        this.googleButton.addEventListener("click", function () {
             createWorkspace.call(this, "CKAN Wirecloud Google View");
         }.bind(this));
 
-        var createFlotrButton = new StyledElements.StyledButton({text: 'Create dashboard with flotr Graph', class: 'btn-primary'});
-        createFlotrButton.insertInto(mashup_panel);
+        this.googleButton.disable();
+
+        this.flotr2Button = new StyledElements.StyledButton({text: 'Create dashboard with flotr Graph', class: 'btn-primary'});
+        this.flotr2Button.insertInto(mashup_panel);
 
         this.workspace_tab.appendChild(mashup_panel);
 
-        createFlotrButton.addEventListener("click", function () {
+        this.flotr2Button.addEventListener("click", function () {
             createWorkspace.call(this, "CKAN Wirecloud flotr2 view");
         }.bind(this));
+
+        this.flotr2Button.disable();
 
         // create the data selection tab
         // The graph selection tab depends on the data selection tab, so it must be build first
@@ -343,24 +378,53 @@ window.Widget = (function () {
         });
     };
 
+    var selectorsFlotr2 = [
+        '.lineargraph',
+        '.linechart',
+        '.radarchart',
+        '.areagraph',
+        '.areachart',
+        '.columngraph',
+        '.columnchart',
+        '.columnchart-stacked',
+        '.bargraph',
+        '.barchart',
+        '.barchart-stacked',
+        '.scattergraph',
+        '.bubblechart',
+        '.piegraph',
+        '.piechart'
+    ];
+
+    var selectorsGoogleCharts = [
+        '.lineargraph',
+        '.linechart',
+        '.linechart-smooth',
+        '.combochart',
+        '.areagraph',
+        '.areachart',
+        '.areachart-stacked',
+        '.steppedareachart',
+        '.columngraph',
+        '.columnchart',
+        '.columnchart-stacked',
+        '.histogram',
+        '.bargraph',
+        '.barchart',
+        '.barchart-stacked',
+        '.scattergraph',
+        '.scatterchart',
+        '.bubblechart',
+        '.piegraph',
+        '.piechart',
+        '.piechart-3d',
+        '.donutchart',
+        '.geograph',
+        '.geochart',
+        '.geochart-markers'
+    ];
+
     var enable_graphs_flotr2 = function enable_graphs_flotr2() {
-        var selectorsFlotr2 = [
-            '.lineargraph',
-            '.linechart',
-            '.radarchart',
-            '.areagraph',
-            '.areachart',
-            '.columngraph',
-            '.columnchart',
-            '.columnchart-stacked',
-            '.bargraph',
-            '.barchart',
-            '.barchart-stacked',
-            '.scattergraph',
-            '.bubblechart',
-            '.piegraph',
-            '.piechart'
-        ];
         var graphsFlotr2 = document.body.querySelectorAll(selectorsFlotr2);
 
         for (var i = 0; i < graphsFlotr2.length; i++) {
@@ -369,33 +433,6 @@ window.Widget = (function () {
     };
 
     var enable_graphs_googlecharts = function enable_graphs_googlecharts() {
-        var selectorsGoogleCharts = [
-            '.lineargraph',
-            '.linechart',
-            '.linechart-smooth',
-            '.combochart',
-            '.areagraph',
-            '.areachart',
-            '.areachart-stacked',
-            '.steppedareachart',
-            '.columngraph',
-            '.columnchart',
-            '.columnchart-stacked',
-            '.histogram',
-            '.bargraph',
-            '.barchart',
-            '.barchart-stacked',
-            '.scattergraph',
-            '.scatterchart',
-            '.bubblechart',
-            '.piegraph',
-            '.piechart',
-            '.piechart-3d',
-            '.donutchart',
-            '.geograph',
-            '.geochart',
-            '.geochart-markers'
-        ];
         var graphsGoogle = document.body.querySelectorAll(selectorsGoogleCharts);
 
         for (var j = 0; j < graphsGoogle.length; j++) {
