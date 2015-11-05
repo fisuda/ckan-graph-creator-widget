@@ -61,7 +61,7 @@ window.Widget = (function () {
         container.appendChild(group_title);
 
         // Create the group column select
-        this.group_axis_select = new StyledElements.StyledSelect({'class': 'full'});
+        this.group_axis_select = new StyledElements.Select({'class': 'full'});
         this.group_axis_select.addEventListener('change', create_graph_config.bind(this));
         container.appendChild(this.group_axis_select);
 
@@ -82,35 +82,35 @@ window.Widget = (function () {
         group_title = document.createElement('h3');
         group_title.innerHTML = 'Axis X';
         container.appendChild(group_title);
-        this.axisx_select = new StyledElements.StyledSelect({'class': 'full'});
+        this.axisx_select = new StyledElements.Select({'class': 'full'});
         this.axisx_select.addEventListener('change', create_graph_config.bind(this));
         container.appendChild(this.axisx_select);
 
         group_title = document.createElement('h3');
         group_title.innerHTML = 'Axis Y';
         container.appendChild(group_title);
-        this.axisy_select = new StyledElements.StyledSelect({'class': 'full'});
+        this.axisy_select = new StyledElements.Select({'class': 'full'});
         this.axisy_select.addEventListener('change', create_graph_config.bind(this));
         container.appendChild(this.axisy_select);
 
         group_title = document.createElement('h3');
         group_title.innerHTML = 'Size Axis';
         container.appendChild(group_title);
-        this.axisz_select = new StyledElements.StyledSelect({'class': 'full'});
+        this.axisz_select = new StyledElements.Select({'class': 'full'});
         this.axisz_select.addEventListener('change', create_graph_config.bind(this));
         container.appendChild(this.axisz_select);
 
         group_title = document.createElement('h3');
         group_title.innerHTML = 'Series field';
         container.appendChild(group_title);
-        this.series_field_select = new StyledElements.StyledSelect({'class': 'full'});
+        this.series_field_select = new StyledElements.Select({'class': 'full'});
         this.series_field_select.addEventListener('change', create_graph_config.bind(this));
         container.appendChild(this.series_field_select);
 
         group_title = document.createElement('h3');
         group_title.innerHTML = 'Name of the bubble';
         container.appendChild(group_title);
-        this.id_bubble_select = new StyledElements.StyledSelect({'class': 'full'});
+        this.id_bubble_select = new StyledElements.Select({'class': 'full'});
         this.id_bubble_select.addEventListener('change', create_graph_config.bind(this));
         container.appendChild(this.id_bubble_select);
     };
@@ -230,7 +230,7 @@ window.Widget = (function () {
     };
 
     Widget.prototype.init = function init() {
-        this.layout = new StyledElements.StyledNotebook({'class': 'se-notebook-crumbs'});
+        this.layout = new StyledElements.Notebook({'class': 'se-notebook-crumbs'});
         this.layout.insertInto(document.body);
 
         var chart_tab = this.layout.createTab({name: "1. Chart", closable: false});
@@ -254,7 +254,7 @@ window.Widget = (function () {
 
         mashup_panel.appendChild(temp_d);
 
-        this.googleButton = new StyledElements.StyledButton({text: 'Create dashboard with Google Graph', class: 'btn-primary'});
+        this.googleButton = new StyledElements.Button({text: 'Create dashboard with Google Graph', class: 'btn-primary'});
         this.googleButton.insertInto(mashup_panel);
 
         this.workspace_tab.appendChild(mashup_panel);
@@ -265,7 +265,7 @@ window.Widget = (function () {
 
         this.googleButton.disable();
 
-        this.flotr2Button = new StyledElements.StyledButton({text: 'Create dashboard with flotr Graph', class: 'btn-primary'});
+        this.flotr2Button = new StyledElements.Button({text: 'Create dashboard with flotr Graph', class: 'btn-primary'});
         this.flotr2Button.insertInto(mashup_panel);
 
         this.workspace_tab.appendChild(mashup_panel);
@@ -278,7 +278,7 @@ window.Widget = (function () {
 
         // create the data selection tab
         // The graph selection tab depends on the data selection tab, so it must be build first
-        this.data_form_alternatives = new StyledElements.StyledAlternatives();
+        this.data_form_alternatives = new StyledElements.Alternatives();
         this.data_tab.appendChild(this.data_form_alternatives);
 
         this.normal_form_alternative = this.data_form_alternatives.createAlternative();
