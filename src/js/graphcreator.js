@@ -213,10 +213,8 @@ window.Widget = (function () {
         preferences.graph_series = JSON.stringify(preferences.graph_series);
         preferences.graph_fields = JSON.stringify(preferences.graph_fields);
 
-        var name = document.getElementById("dashboard_name").value;
-
         MashupPlatform.mashup.createWorkspace({
-            name: name,
+            name: this.nameinput.getValue(),
             mashup: 'CoNWeT/' + mashupname + '/1.0.0',
             preferences: preferences,
             onSuccess: function (workspace) {
@@ -245,20 +243,14 @@ window.Widget = (function () {
         var mashup_panel = document.createElement('div');
         mashup_panel.className = "mashup_panel";
         var temp_p = document.createElement('p');
-        temp_p.style = "margin-bottom: 10px";
         temp_p.appendChild(document.createTextNode("If you have finished, you can create a new dashboard now."));
         mashup_panel.appendChild(temp_p);
 
-        var temp_d = document.createElement("div");
+        var temp_d = document.createElement("label");
         temp_d.appendChild(document.createTextNode("Name:  "));
 
-        var name_input = document.createElement("input");
-        name_input.type = "text";
-        name_input.value = "CKAN Wirecloud View";
-        name_input.className = "se-text-field";
-        name_input.id = "dashboard_name";
-
-        temp_d.appendChild(name_input);
+        this.nameinput = new StyledElements.TextField();
+        this.nameinput.setValue("CKAN Wirecloud View").appendTo(temp_d);
 
         mashup_panel.appendChild(temp_d);
 
