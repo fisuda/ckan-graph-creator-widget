@@ -254,7 +254,7 @@ window.Widget = (function () {
 
         mashup_panel.appendChild(temp_d);
 
-        this.googleButton = new StyledElements.Button({text: 'Create dashboard with Google Graph', class: 'btn-primary'});
+        this.googleButton = new StyledElements.Button({text: 'Create dashboard with Google Graph', class: 'btn-success'});
         this.googleButton.insertInto(mashup_panel);
 
         this.workspace_tab.appendChild(mashup_panel);
@@ -265,7 +265,7 @@ window.Widget = (function () {
 
         this.googleButton.disable();
 
-        this.flotr2Button = new StyledElements.Button({text: 'Create dashboard with flotr Graph', class: 'btn-primary'});
+        this.flotr2Button = new StyledElements.Button({text: 'Create dashboard with flotr Graph', class: 'btn-success'});
         this.flotr2Button.insertInto(mashup_panel);
 
         this.workspace_tab.appendChild(mashup_panel);
