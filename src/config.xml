@@ -13,6 +13,7 @@
   </details>
   <requirements>
     <feature name="DashboardManagement"/>
+    <feature name="StyledElements"/>
   </requirements>
   <wiring>
     <outputendpoint name="flotr2-graph-config" type="text" label="Flotr2 Configuration" description="The configuration of your flotr2 graph" friendcode="flotr2-graph-data" />
