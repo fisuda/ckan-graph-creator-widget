@@ -16,6 +16,8 @@
   <wiring>
     <outputendpoint name="flotr2-graph-config" type="text" label="Flotr2 Configuration" description="The configuration of your flotr2 graph" friendcode="flotr2-graph-data" />
     <outputendpoint name="googlecharts-graph-config" type="text" label="Google Charts Configuration" description="The configuration of your Google Charts graph" friendcode="google-charts-data" />
+    <outputendpoint name="highcharts-graph-config" type="text" label="HighCharts Configuration" description="The configuration of your HighCharts graph" friendcode="highcharts-charts-data" />
+
     <inputendpoint name="dataset" type="text" label="Data and Structure" description="A JSON with two fields: structure (for the structure of the data) and data (the data ifself)" actionlabel="Data and Structure" friendcode="dataset"/>
   </wiring>
   <contents src="index.html" cacheable="false" useplatformstyle="true"/>

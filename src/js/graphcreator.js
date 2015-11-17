@@ -157,6 +157,7 @@ window.Widget = (function () {
 
         this.googleButton.disable();
         this.flotr2Button.disable();
+
         if (googleHave) {
             this.googleButton.enable();
         }
@@ -326,6 +327,9 @@ window.Widget = (function () {
         if (MashupPlatform.widget.outputs['googlecharts-graph-config'].connected) {
             enable_graphs_googlecharts.call(this);
         }
+        if (MashupPlatform.widget.outputs['highcharts-graph-config'].connected) {
+            enable_graphs_highcharts.call(this);
+        }
     };
 
     var get_general_series = function get_general_series() {
@@ -369,6 +373,7 @@ window.Widget = (function () {
             this.workspace_tab.enable();
             create_flotr2_config.call(this, series);
             create_google_charts_config.call(this, series);
+            create_highcharts_config.call(this, series);
         }
     };
 
@@ -392,6 +397,11 @@ window.Widget = (function () {
         '.barchart-stacked',
         '.scattergraph',
         '.bubblechart',
+        '.piegraph',
+        '.piechart'
+    ];
+
+    var selectorsHighCharts = [
         '.piegraph',
         '.piechart'
     ];
@@ -437,6 +447,14 @@ window.Widget = (function () {
 
         for (var j = 0; j < graphsGoogle.length; j++) {
             graphsGoogle[j].classList.remove("disabled");
+        }
+    };
+
+    var enable_graphs_highcharts = function enable_graphs_highcharts() {
+        var graphsHighcharts = document.body.querySelectorAll(selectorsHighCharts);
+
+        for (var j = 0;  j < graphsHighcharts.length; j++) {
+            graphsHighcharts[j].classList.remove("disabled");
         }
     };
 
@@ -527,7 +545,7 @@ window.Widget = (function () {
                     track: true,
                     relative: true
                 },
-                HtmlText: htmltext,
+                HtmlText: htmltext
             },
             datasets: series_meta,
             data: data
@@ -594,6 +612,85 @@ window.Widget = (function () {
         } else {
             return value;
         }
+    };
+
+    var create_highcharts_config = function create_highcharts_config(series) {
+        var j, i;
+        var graph_type = this.current_graph_type;
+        var group_column = this.group_axis_select.getValue();
+        var HighChartConfig = {
+            chart: {
+                plotBackgroundColor: null,
+                plotBorderWidth: null,
+                plotShadow: false
+            },
+            title: {
+                text: this.series_title
+            },
+            tooltip: {
+                pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+            },
+            plotOptions: {
+                series: {
+                    dataLabels: {
+                        enabled: true,
+                        format: '{point.name}: {point.y}'
+                    }
+                }
+            }
+        };
+
+        var fulldata = [];
+        var drills = [];
+        var datasets = this.dataset.data;
+        for (j = 0; j < series.length; j++) {
+            var nameRow = series[j];
+            var serieInfo = {
+                name: nameRow,
+                drilldown: nameRow,
+                y: 100
+            };
+            var sum = 0;
+
+            var drillI = {
+                name: nameRow,
+                id: nameRow,
+                data: []
+            };
+
+            for (i = 0; i < datasets.length; i++) {
+                var value = parse_google_data.call(this, nameRow, datasets[i][nameRow]);
+                var drillD = [datasets[i][group_column], value];
+                sum = sum + value;
+                drillI.data.push(drillD);
+            }
+            serieInfo.y = sum;
+
+            drills.push(drillI);
+            fulldata.push(serieInfo);
+        }
+
+        if (graph_type === 'piechart') {
+            HighChartConfig.chart.type = 'pie';
+            HighChartConfig.plotOptions.pie = {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                dataLabels: {
+                    enabled: false
+                },
+                showInLegend: true
+            };
+            HighChartConfig.series = [{
+                name: this.dataset.metadata.name || "",
+                colorByPoint: true,
+                data: fulldata
+            }];
+            HighChartConfig.drilldown = {
+                series: drills
+            };
+        }
+
+        MashupPlatform.wiring.pushEvent('highcharts-graph-config', JSON.stringify(HighChartConfig));
     };
 
     var create_google_charts_config = function create_google_charts_config(series) {

@@ -61,6 +61,9 @@
                 },
                 "googlecharts-graph-config": {
                     connected: true
+                },
+                "highcharts-graph-config": {
+                    connected: true
                 }
             };
             window.MashupPlatform.wiring.registerStatusCallback = function() {};
