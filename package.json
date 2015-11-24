@@ -1,25 +1,8 @@
 {
   "vendor": "CoNWeT",
   "name": "ckan-graph-creator",
-  "version": "1.0.2",
-  "description": "",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/wirecloud-fiware/ckan-graph-creator-widget.git"
-  },
-  "keywords": [
-    "ckan",
-    "graph",
-    "charts",
-    "creator",
-    "wirecloud"
-  ],
-  "author": "CoNWeT Lab., Universidad Politecnica de Madrid",
-  "license": "https://github.com/Wirecloud/googlecharts-widget/blob/master/LICENSE",
-  "bugs": {
-    "url": "https://github.com/wirecloud-fiware/ckan-graph-creator-widget/issues"
-  },
-  "homepage": "https://github.com/wirecloud-fiware/ckan-graph-creator-widget",
+  "version": "1.0.3",
+  "description": "This repository contains a WireCloud widget, this package.json file is used only for installing npm dependencies. See the src/config.xml file for more details",
   "devDependencies": {
     "bower": "^1.3.12",
     "grunt": "^0.4.5",

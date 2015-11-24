@@ -1,3 +1,9 @@
+## v1.0.3
+
+- Update style
+- Fix bug on non-Firefox browsers
+- **Internal**: update to StyledElements 0.6. Now this widget requires WireCloud 0.8.2+
+
 ## v1.0.2
 
 - Update CSS
