@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-/* global GraphSelector, MashupPlatform, StyledElements, $ */
+/* global GraphSelector, MashupPlatform, StyledElements, HighChartConfigurer, $ */
 
 
 window.Widget = (function () {
@@ -35,6 +35,8 @@ window.Widget = (function () {
         this.dataset = null;     //The dataset to be used. {structure: {...}, data: {...}, metadata: {...}}
         this.column_info = null;
         this._3axis_alternative = null;
+
+        this.HighChartConfig = new HighChartConfigurer();
 
         // Recieve events for the "dataset" input endpoint
         MashupPlatform.wiring.registerCallback('dataset', function (data) {
@@ -328,7 +330,8 @@ window.Widget = (function () {
             enable_graphs_googlecharts.call(this);
         }
         if (MashupPlatform.widget.outputs['highcharts-graph-config'].connected) {
-            enable_graphs_highcharts.call(this);
+            this.HighChartConfig.enable();
+            // enable_graphs_highcharts.call(this);
         }
     };
 
@@ -401,10 +404,10 @@ window.Widget = (function () {
         '.piechart'
     ];
 
-    var selectorsHighCharts = [
-        '.piegraph',
-        '.piechart'
-    ];
+    // var selectorsHighCharts = [
+    //     '.piegraph',
+    //     '.piechart'
+    // ];
 
     var selectorsGoogleCharts = [
         '.lineargraph',
@@ -450,13 +453,13 @@ window.Widget = (function () {
         }
     };
 
-    var enable_graphs_highcharts = function enable_graphs_highcharts() {
-        var graphsHighcharts = document.body.querySelectorAll(selectorsHighCharts);
+    // var enable_graphs_highcharts = function enable_graphs_highcharts() {
+    //     var graphsHighcharts = document.body.querySelectorAll(selectorsHighCharts);
 
-        for (var j = 0;  j < graphsHighcharts.length; j++) {
-            graphsHighcharts[j].classList.remove("disabled");
-        }
-    };
+    //     for (var j = 0;  j < graphsHighcharts.length; j++) {
+    //         graphsHighcharts[j].classList.remove("disabled");
+    //     }
+    // };
 
     var create_flotr2_config = function create_flotr2_config(series) {
         var i, j, row;
@@ -615,82 +618,89 @@ window.Widget = (function () {
     };
 
     var create_highcharts_config = function create_highcharts_config(series) {
-        var j, i;
-        var graph_type = this.current_graph_type;
-        var group_column = this.group_axis_select.getValue();
-        var HighChartConfig = {
-            chart: {
-                plotBackgroundColor: null,
-                plotBorderWidth: null,
-                plotShadow: false
-            },
-            title: {
-                text: this.series_title
-            },
-            tooltip: {
-                pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
-            },
-            plotOptions: {
-                series: {
-                    dataLabels: {
-                        enabled: true,
-                        format: '{point.name}: {point.y}'
-                    }
-                }
-            }
-        };
+        var config = this.HighChartConfig.configure(series, {
+            graph_type: this.current_graph_type,
+            group_axis_select: this.group_axis_select,
+            series_title: this.series_title,
+            dataset: this.dataset,
+            column_info: this.column_info
+        });
+        // var j, i;
+        // var graph_type = this.current_graph_type;
+        // var group_column = this.group_axis_select.getValue();
+        // var HighChartConfig = {
+        //     chart: {
+        //         plotBackgroundColor: null,
+        //         plotBorderWidth: null,
+        //         plotShadow: false
+        //     },
+        //     title: {
+        //         text: this.series_title
+        //     },
+        //     tooltip: {
+        //         pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+        //     },
+        //     plotOptions: {
+        //         series: {
+        //             dataLabels: {
+        //                 enabled: true,
+        //                 format: '{point.name}: {point.y}'
+        //             }
+        //         }
+        //     }
+        // };
 
-        var fulldata = [];
-        var drills = [];
-        var datasets = this.dataset.data;
-        for (j = 0; j < series.length; j++) {
-            var nameRow = series[j];
-            var serieInfo = {
-                name: nameRow,
-                drilldown: nameRow,
-                y: 100
-            };
-            var sum = 0;
+        // var fulldata = [];
+        // var drills = [];
+        // var datasets = this.dataset.data;
+        // for (j = 0; j < series.length; j++) {
+        //     var nameRow = series[j];
+        //     var serieInfo = {
+        //         name: nameRow,
+        //         drilldown: nameRow,
+        //         y: 100
+        //     };
+        //     var sum = 0;
 
-            var drillI = {
-                name: nameRow,
-                id: nameRow,
-                data: []
-            };
+        //     var drillI = {
+        //         name: nameRow,
+        //         id: nameRow,
+        //         data: []
+        //     };
 
-            for (i = 0; i < datasets.length; i++) {
-                var value = parse_google_data.call(this, nameRow, datasets[i][nameRow]);
-                var drillD = [datasets[i][group_column], value];
-                sum = sum + value;
-                drillI.data.push(drillD);
-            }
-            serieInfo.y = sum;
+        //     for (i = 0; i < datasets.length; i++) {
+        //         var value = parse_google_data.call(this, nameRow, datasets[i][nameRow]);
+        //         var drillD = [datasets[i][group_column], value];
+        //         sum = sum + value;
+        //         drillI.data.push(drillD);
+        //     }
+        //     serieInfo.y = sum;
 
-            drills.push(drillI);
-            fulldata.push(serieInfo);
-        }
+        //     drills.push(drillI);
+        //     fulldata.push(serieInfo);
+        // }
 
-        if (graph_type === 'piechart') {
-            HighChartConfig.chart.type = 'pie';
-            HighChartConfig.plotOptions.pie = {
-                allowPointSelect: true,
-                cursor: 'pointer',
-                dataLabels: {
-                    enabled: false
-                },
-                showInLegend: true
-            };
-            HighChartConfig.series = [{
-                name: this.dataset.metadata.name || "",
-                colorByPoint: true,
-                data: fulldata
-            }];
-            HighChartConfig.drilldown = {
-                series: drills
-            };
-        }
+        // if (graph_type === 'piechart') {
+        //     HighChartConfig.chart.type = 'pie';
+        //     HighChartConfig.plotOptions.pie = {
+        //         allowPointSelect: true,
+        //         cursor: 'pointer',
+        //         dataLabels: {
+        //             enabled: false
+        //         },
+        //         showInLegend: true
+        //     };
+        //     HighChartConfig.series = [{
+        //         name: this.dataset.metadata.name || "",
+        //         colorByPoint: true,
+        //         data: fulldata
+        //     }];
+        //     HighChartConfig.drilldown = {
+        //         series: drills
+        //     };
+        // }
 
-        MashupPlatform.wiring.pushEvent('highcharts-graph-config', JSON.stringify(HighChartConfig));
+        MashupPlatform.wiring.pushEvent('highcharts-graph-config', JSON.stringify(config));
     };
 
     var create_google_charts_config = function create_google_charts_config(series) {
