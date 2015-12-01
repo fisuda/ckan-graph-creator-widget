@@ -42,7 +42,17 @@ module.exports = function (grunt) {
         copy: {
             main: {
                 files: [
-                    {expand: true, cwd: 'src/js', src: '*', dest: 'build/src/js'}
+                    {expand: true, cwd: 'src/js', src: '**/*', dest: 'build/src/js'}
+                ]
+            },
+            shared: {
+                files: [
+                    {expand: true, cwd: 'shared', src: '**/*', dest: 'build/src/shared'}
+                ]
+            },
+            operator: {
+                files: [
+                    {expand: true, cwd: 'src-operator/js', src: '**/*', dest: 'build/src/js'}
                 ]
             }
         },
@@ -54,6 +64,47 @@ module.exports = function (grunt) {
         },
 
         compress: {
+            operator: {
+                options: {
+                    mode: 'zip',
+                    archive: 'dist/<%= pkg.vendor %>_<%= pkg.name %>_operator_<%= pkg.version %>.wgt'
+                },
+                files: [
+                    {
+                        expand: true,
+                        cwd: 'src-operator',
+                        src: [
+                            'doc/**/*',
+                            'index.html',
+                            'config.xml',
+                            'DESCRIPTION.md'
+                        ]
+                    },
+                    {
+                        expand: true,
+                        cwd: 'build/lib',
+                        src: [
+                            'lib/**/*',
+                            '!lib/__untyped__/**'
+                        ]
+                    },
+                    {
+                        expand: true,
+                        cwd: 'build/src',
+                        src: [
+                            'js/**/*',
+                            'shared/**/*'
+                        ]
+                    },
+                    {
+                        expand: true,
+                        cwd: '.',
+                        src: [
+                            'LICENSE'
+                        ]
+                    }
+                ]
+            },
             widget: {
                 options: {
                     mode: 'zip',
@@ -114,13 +165,41 @@ module.exports = function (grunt) {
                     from: /version=\"[0-9]+\.[0-9]+\.[0-9]+(-dev)?\"/g,
                     to: 'version="<%= pkg.version %>"'
                 }]
+            },
+            versionoperator: {
+                overwrite: true,
+                src: ['src-operator/config.xml'],
+                replacements: [{
+                    from: /version=\"[0-9]+\.[0-9]+\.[0-9]+(-dev)?\"/g,
+                    to: 'version="<%= pkg.version %>"'
+                }]
             }
         },
 
         jscs: {
-            src: 'src/js/**/*',
-            options: {
-                config: ".jscsrc"
+            widget: {
+                files: {
+                    src: 'src/js/**/*'
+                },
+                options: {
+                    config: ".jscsrc"
+                }
+            },
+            shared: {
+                files: {
+                    src: 'shared/js/**/*'
+                },
+                options: {
+                    config: ".jscsrc"
+                }
+            },
+            operator: {
+                files: {
+                    src: 'src-operator/js/**/*'
+                },
+                options: {
+                    config: ".jscsrc"
+                }
             }
         },
 
@@ -137,6 +216,22 @@ module.exports = function (grunt) {
                 },
                 files: {
                     src: ['src/js/**/*.js']
+                }
+            },
+            shared: {
+                options: {
+                    jshintrc: '.jshintrc'
+                },
+                files: {
+                    src: ['shared/js/**/*.js']
+                }
+            },
+            operator: {
+                options: {
+                    jshintrc: '.jshintrc'
+                },
+                files: {
+                    src: ['src-operator/js/**/*.js']
                 }
             },
             grunt: {
@@ -206,7 +301,7 @@ module.exports = function (grunt) {
         'jshint:grunt',
         'jshint:pre',
         'jshint:test',
-        'jscs',
+        'jscs:widget',
         'jasmine:coverage'
     ]);
 
@@ -220,4 +315,17 @@ module.exports = function (grunt) {
         'compress:widget'
     ]);
 
+    grunt.registerTask('operator', [
+        'bower:install',
+        'jshint:shared',
+        'jscs:shared',
+        'jshint:operator',
+        'jscs:operator',
+        'clean:temp',
+        'copy:shared',
+        'copy:operator',
+        'strip_code',
+        'replace:versionoperator',
+        'compress:operator'
+    ]);
 };

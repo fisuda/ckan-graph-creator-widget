@@ -218,7 +218,7 @@ window.Widget = (function () {
 
         MashupPlatform.mashup.createWorkspace({
             name: this.nameinput.getValue(),
-            mashup: 'CoNWeT/' + mashupname + '/1.0.0',
+            mashup: 'CoNWeT/' + mashupname + '/1.0.1',
             preferences: preferences,
             onSuccess: function (workspace) {
                 var msg = "Dashboard " + workspace.name + " created successfully.";
