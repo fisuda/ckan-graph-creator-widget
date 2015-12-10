@@ -1,3 +1,8 @@
+## v1.0.4
+
+- Initial support for creating highchart configurations
+- Build a `ckan-chart-creator-operator` sharing the code with this widget
+
 ## v1.0.3
 
 - Update style
