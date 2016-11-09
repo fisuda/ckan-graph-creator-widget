@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-/*globals CkanGraphCreatorOperator */
+/* globals CkanGraphCreatorOperator */
+
+
 window.onload = function () {
     "use strict";
     new CkanGraphCreatorOperator();

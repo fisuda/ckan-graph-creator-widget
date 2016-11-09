@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 CoNWeT Lab., Universidad Politécnica de Madrid
+ * Copyright (c) 2014-2016 CoNWeT Lab., Universidad Politécnica de Madrid
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-/* global GraphSelector, MashupPlatform, StyledElements, HighChartConfigurer, $ */
+/* globals GraphSelector, StyledElements, HighChartConfigurer */
 
 
 window.Widget = (function () {
@@ -32,7 +32,7 @@ window.Widget = (function () {
         this.current_graph_type = null;
         this.group_axis_select = null;
         this.series_div = null;
-        this.dataset = null;     //The dataset to be used. {structure: {...}, data: {...}, metadata: {...}}
+        this.dataset = null;     // Dataset to be used: {structure: {...}, data: {...}, metadata: {...}}
         this.column_info = null;
         this._3axis_alternative = null;
 
@@ -124,7 +124,7 @@ window.Widget = (function () {
         if (type.toLowerCase() == "warning") {
             alertDiv.innerHTML = "<strong>Warning: </strong>" + msg;
             alertDiv.className += " alert-warning";
-        }else if (type.toLowerCase() == "success") {
+        } else if (type.toLowerCase() == "success") {
             alertDiv.innerHTML = "";
             alertDiv.appendChild(document.createTextNode(msg));
             alertDiv.className += " alert-success";
@@ -194,12 +194,11 @@ window.Widget = (function () {
             preferences.graph_fields.series_field = this.series_field_select.getValue();
             preferences.graph_fields.id_bubble = this.id_bubble_select.getValue();
             preferences.graph_series = get_bubble_series.call(this);
-
-        }else {
+        } else {
             preferences.graph_series = get_general_series.call(this);
         }
 
-        //We check that there are no fields unfinished
+        // We check that there are no fields unfinished
         if (preferences.graph_series.length === 0) {
             showMsg.call(this, "Can not create dashboard, a required field is empty.", "warning");
             return;
@@ -212,7 +211,7 @@ window.Widget = (function () {
             }
         }
 
-        //Convert the preferences that are not text to JSON
+        // Convert the preferences that are not text to JSON
         preferences.graph_series = JSON.stringify(preferences.graph_series);
         preferences.graph_fields = JSON.stringify(preferences.graph_fields);
 
@@ -332,7 +331,7 @@ window.Widget = (function () {
         var i;
         var series = [];
 
-        //Get the selected checkboxes
+        // Get the selected checkboxes
         for (i = 0; i < series_checkboxes.length; i++) {
             if (series_checkboxes[i].checked) {
                 series.push(series_checkboxes[i].value);
@@ -373,8 +372,9 @@ window.Widget = (function () {
     };
 
     var disable_all = function disable_all() {
-        $(".graph-button").each(function (i, obj) {
-            obj.classList.add("disabled");
+        var nodes = document.querySelectorAll(".graph-button");
+        Array.prototype.slice.call(nodes).forEach(function (button) {
+            button.classList.add("disabled");
         });
     };
 
@@ -457,12 +457,12 @@ window.Widget = (function () {
         var i, j, row;
         var graph_type = this.current_graph_type;
         var group_column = this.group_axis_select.getValue();
-        var data = {};        //Contains all the series that wil be shown in the graph
-        var ticks = [];       //When string are used as group column, we need to format the values
-        var series_meta = {}; //Contails the name of the datasets
+        var data = {};        // Contains all the series that wil be shown in the graph
+        var ticks = [];       // When string are used as group column, we need to format the values
+        var series_meta = {}; // Contails the name of the datasets
         var group_column_axis = (graph_type == 'bargraph') ? 'yaxis' : 'xaxis';
 
-        //Group Column type
+        // Group Column type
         var group_column_type = null;
         for (i = 0; i < this.dataset.structure.length && group_column_type == null; i++) {
             var field = this.dataset.structure[i];
@@ -471,7 +471,7 @@ window.Widget = (function () {
             }
         }
 
-        //Is the Group Column an interger or a float?
+        // Is the Group Column an interger or a float?
         var group_column_float = false;
         for (i = 0; i < this.dataset.data.length && !group_column_float; i++) {
             row = this.dataset.data[i];
@@ -480,7 +480,7 @@ window.Widget = (function () {
             }
         }
 
-        //Create the series
+        // Create the series
         for (i = 0; i < series.length; i++) {
             data[i] = [];
             series_meta[i] = {
@@ -505,14 +505,14 @@ window.Widget = (function () {
                     row = this.dataset.data[j];
                     var group_column_value = row[group_column];
 
-                    //Numbers codified as strings must be transformed in real JS numbers
-                    //Just in case the previous widget/operator hasn't done it.
+                    // Numbers codified as strings must be transformed in real JS numbers
+                    // Just in case the previous widget/operator hasn't done it.
                     switch (group_column_type) {
                     case 'number':
                         group_column_value = Number(group_column_value);
                         break;
                     default:
-                        //Ticks should be only introduced once
+                        // Ticks should be only introduced once
                         if (i === 0) {
                             ticks.push([j, group_column_value]);
                         }
@@ -520,9 +520,9 @@ window.Widget = (function () {
                         break;
                     }
 
-                    //In the bars graph the data should be encoded the other way around
-                    //Transformation into numbers is automatic since a graph should be
-                    //build with numbers
+                    // In the bars graph the data should be encoded the other way around
+                    // Transformation into numbers is automatic since a graph should be
+                    // build with numbers
                     if (graph_type === 'bargraph') {
                         data[i].push([Number(row[series[i]]), group_column_value]);
                     } else {
@@ -532,7 +532,7 @@ window.Widget = (function () {
             }
         }
 
-        //FlotR2 configuration
+        // FlotR2 configuration
         var htmltext = false;
         var flotr2Config = {
             config: {
@@ -546,14 +546,14 @@ window.Widget = (function () {
             data: data
         };
 
-        //Configure the group column (X except for when selected graph is a Bar chart)
+        // Configure the group column (X except for when selected graph is a Bar chart)
         flotr2Config.config[group_column_axis] = {
             labelsAngle: 45,
             ticks: ticks.length !== 0 ? ticks : null,
             noTicks: data[0].length,
-            title:  group_column,
+            title: group_column,
             showLabels: true,
-            //If the group_column data contains at least one float: 2 decimals. Otherwise: 0
+            // If the group_column data contains at least one float: 2 decimals. Otherwise: 0
             tickDecimals: group_column_float ? 2 : 0
         };
 
@@ -699,7 +699,7 @@ window.Widget = (function () {
         var i, j, dataset_row, row;
         var graph_type = this.current_graph_type;
         var group_column = this.group_axis_select.getValue();
-        var data = [];        //Contains all the series that wil be shown in the graph
+        var data = [];        // Contains all the series that wil be shown in the graph
 
         // Format data
         if (graph_type === 'bubblechart') {

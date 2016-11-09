@@ -1,4 +1,4 @@
-/*!
+/*
  *   Copyright 2014-2015 CoNWeT Lab., Universidad Politecnica de Madrid
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,19 +14,18 @@
  *   limitations under the License.
  */
 
+var ConfigParser = require('wirecloud-config-parser');
+var wparser = new ConfigParser('src/config.xml');
+var oparser = new ConfigParser('src-operator/config.xml');
 
 module.exports = function (grunt) {
 
     'use strict';
 
-    var fs = require('fs');
-
-    var jshintrc_pre = JSON.parse(fs.readFileSync('.jshintrc', 'utf8'));
-    jshintrc_pre.devel = true;
-
     grunt.initConfig({
 
-        pkg: grunt.file.readJSON('package.json'),
+        ometadata: oparser.getData(),
+        wmetadata: wparser.getData(),
 
         bower: {
             install: {
@@ -39,27 +38,43 @@ module.exports = function (grunt) {
             }
         },
 
+        eslint: {
+            operator: {
+                src: 'src-operator/js/**/*.js'
+            },
+            widget: {
+                src: 'src/js/**/*.js'
+            },
+            grunt: {
+                options: {
+                    configFile: '.eslintrc-node'
+                },
+                src: 'Gruntfile.js',
+            },
+            shared: {
+                src: 'src/js/**/*.js'
+            },
+            test: {
+                options: {
+                    configFile: '.eslintrc-jasmine'
+                },
+                src: ['src/test/js/*.js']
+            }
+        },
+
         copy: {
             main: {
                 files: [
-                    {expand: true, cwd: 'src/js', src: '**/*', dest: 'build/src/js'}
-                ]
-            },
-            shared: {
-                files: [
-                    {expand: true, cwd: 'shared', src: '**/*', dest: 'build/src/shared'}
-                ]
-            },
-            operator: {
-                files: [
-                    {expand: true, cwd: 'src-operator/js', src: '**/*', dest: 'build/src/js'}
+                    {expand: true, cwd: 'src/js', src: '*', dest: 'build/src/js'},
+                    {expand: true, cwd: 'shared/js', src: '*', dest: 'build/shared/js'},
+                    {expand: true, cwd: 'src-operator/js', src: '*', dest: 'build/src-operator/js'}
                 ]
             }
         },
 
         strip_code: {
             multiple_files: {
-                src: ['build/src/js/**/*.js']
+                src: ['build/src/js/**/*.js', 'build/src/shared/**/*.js', 'build/src-operator/**/*.js']
             }
         },
 
@@ -67,25 +82,81 @@ module.exports = function (grunt) {
             operator: {
                 options: {
                     mode: 'zip',
-                    archive: 'dist/<%= pkg.vendor %>_<%= pkg.name %>_operator_<%= pkg.version %>.wgt'
+                    archive: 'dist/<%= ometadata.vendor %>_<%= ometadata.name %>_<%= ometadata.version %>.wgt'
                 },
                 files: [
                     {
                         expand: true,
                         cwd: 'src-operator',
                         src: [
+                            'DESCRIPTION.md',
+                            'css/**/*',
                             'doc/**/*',
+                            'images/**/*',
                             'index.html',
-                            'config.xml',
-                            'DESCRIPTION.md'
+                            'config.xml'
                         ]
                     },
                     {
                         expand: true,
                         cwd: 'build/lib',
                         src: [
-                            'lib/**/*',
-                            '!lib/__untyped__/**'
+                            'lib/**/*'
+                        ]
+                    },
+                    {
+                        expand: true,
+                        cwd: 'build/shared',
+                        src: [
+                            'js/**/*'
+                        ]
+                    },
+                    {
+                        expand: true,
+                        cwd: 'build/src-operator',
+                        src: [
+                            'js/**/*'
+                        ]
+                    },
+                    {
+                        expand: true,
+                        cwd: '.',
+                        src: [
+                            'LICENSE'
+                        ]
+                    }
+                ]
+            },
+            widget: {
+                options: {
+                    mode: 'zip',
+                    archive: 'dist/<%= wmetadata.vendor %>_<%= wmetadata.name %>_<%= wmetadata.version %>.wgt'
+                },
+                files: [
+                    {
+                        expand: true,
+                        cwd: 'src',
+                        src: [
+                            'DESCRIPTION.md',
+                            'css/**/*',
+                            'doc/**/*',
+                            'images/**/*',
+                            'index.html',
+                            'config.xml'
+                        ]
+                    },
+                    {
+                        expand: true,
+                        cwd: 'build/lib',
+                        src: [
+                            'lib/**/*'
+                        ]
+                    },
+                    {
+                        expand: true,
+                        cwd: 'build/shared',
+                        src: [
+                            'js/**/*'
                         ]
                     },
                     {
@@ -104,228 +175,88 @@ module.exports = function (grunt) {
                         ]
                     }
                 ]
-            },
-            widget: {
-                options: {
-                    mode: 'zip',
-                    archive: 'dist/<%= pkg.vendor %>_<%= pkg.name %>_<%= pkg.version %>.wgt'
-                },
-                files: [
-                    {
-                        expand: true,
-                        cwd: 'src',
-                        src: [
-                            'css/**/*',
-                            'doc/**/*',
-                            'images/**/*',
-                            'index.html',
-                            'config.xml',
-                            'DESCRIPTION.md'
-                        ]
-                    },
-                    {
-                        expand: true,
-                        cwd: 'build/lib',
-                        src: [
-                            'lib/**/*'
-                        ]
-                    },
-                    {
-                        expand: true,
-                        cwd: 'build/src',
-                        src: [
-                            'js/**/*'
-                        ]
-                    },
-                    {
-                        expand: true,
-                        cwd: '.',
-                        src: [
-                            'LICENSE'
-                        ]
-                    }
-                ]
             }
         },
 
         clean: {
             build: {
-                src: ['build']
+                src: ['build', 'bower_components']
             },
             temp: {
                 src: ['build/src']
             }
         },
 
-        replace: {
-            version: {
-                overwrite: true,
-                src: ['src/config.xml'],
-                replacements: [{
-                    from: /version=\"[0-9]+\.[0-9]+\.[0-9]+(-dev)?\"/g,
-                    to: 'version="<%= pkg.version %>"'
-                }]
+        karma: {
+            options: {
+                frameworks: ['jasmine'],
+                reporters: ['progress', 'coverage'],
+                browsers: ['Chrome', 'Firefox'],
+                singleRun: true
             },
-            versionoperator: {
-                overwrite: true,
-                src: ['src-operator/config.xml'],
-                replacements: [{
-                    from: /version=\"[0-9]+\.[0-9]+\.[0-9]+(-dev)?\"/g,
-                    to: 'version="<%= pkg.version %>"'
-                }]
-            }
-        },
-
-        jscs: {
-            widget: {
-                files: {
-                    src: 'src/js/**/*'
-                },
-                options: {
-                    config: ".jscsrc"
-                }
-            },
-            shared: {
-                files: {
-                    src: 'shared/js/**/*'
-                },
-                options: {
-                    config: ".jscsrc"
-                }
-            },
-            operator: {
-                files: {
-                    src: 'src-operator/js/**/*'
-                },
-                options: {
-                    config: ".jscsrc"
-                }
-            }
-        },
-
-        jshint: {
-            pre: {
-                options: jshintrc_pre,
-                files: {
-                    src: ['src/js/**/*.js']
-                }
-            },
-            build: {
-                options: {
-                    jshintrc: '.jshintrc'
-                },
-                files: {
-                    src: ['src/js/**/*.js']
-                }
-            },
-            shared: {
-                options: {
-                    jshintrc: '.jshintrc'
-                },
-                files: {
-                    src: ['shared/js/**/*.js']
-                }
-            },
-            operator: {
-                options: {
-                    jshintrc: '.jshintrc'
-                },
-                files: {
-                    src: ['src-operator/js/**/*.js']
-                }
-            },
-            grunt: {
-                options: {
-                    jshintrc: '.jshintrc-node'
-                },
-                files: {
-                    src: ['Gruntfile.js']
-                }
-            },
-            test: {
-                options: {
-                    jshintrc: '.jshintrc-jasmine'
-                },
-                files: {
-                    src: ['src/test/js/**/*.js']
-                }
-            }
-        },
-
-        jasmine: {
-            test: {
-                src: ['src/js/*.js', '!src/js/main.js'],
-                options: {
-                    specs: 'src/test/js/*Spec.js',
-                    helpers: ['src/test/helpers/*.js'],
-                    vendor: ['bower_components/jquery/dist/jquery.js',
-                             'node_modules/jasmine-jquery/lib/jasmine-jquery.js',
-                             'node_modules/mock-applicationmashup/lib/vendor/mockMashupPlatform.js',
-                             'src/test/vendor/*.js']
-                }
-            },
-
             coverage: {
-                src: '<%= jasmine.test.src %>',
                 options: {
-                    helpers: '<%= jasmine.test.options.helpers %>',
-                    specs: '<%= jasmine.test.options.specs %>',
-                    vendor: '<%= jasmine.test.options.vendor %>',
-                    template: require('grunt-template-jasmine-istanbul'),
-                    templateOptions : {
-                        coverage: 'build/coverage/json/coverage.json',
-                        report: [
-                            {type: 'html', options: {dir: 'build/coverage/html'}},
-                            {type: 'cobertura', options: {dir: 'build/coverage/xml'}},
-                            {type: 'text-summary'}
-                        ]
+                    coverageReporter: {
+                        type: 'html',
+                        dir: 'build/coverage'
+                    },
+                    files: [
+                        'bower_components/jquery/dist/jquery.js',
+                        'node_modules/jasmine-jquery/lib/jasmine-jquery.js',
+                        'node_modules/mock-applicationmashup/lib/vendor/mockMashupPlatform.js',
+                        'test/vendor/*.js',
+                        'test/helpers/*.js',
+                        'src/js/!(main).js',
+                        'test/js/*Spec.js'
+                    ],
+                    preprocessors: {
+                        "src/js/*.js": ['coverage'],
                     }
                 }
             }
-        }
+        },
 
+        wirecloud: {
+            options: {
+                overwrite: false
+            },
+            publish: {
+                file: 'dist/<%= metadata.vendor %>_<%= metadata.name %>_<%= metadata.version %>.wgt'
+            }
+        }
     });
 
+    grunt.loadNpmTasks('grunt-wirecloud');
     grunt.loadNpmTasks('grunt-bower-task');
+    grunt.loadNpmTasks('grunt-karma');
+    grunt.loadNpmTasks('gruntify-eslint');
     grunt.loadNpmTasks('grunt-contrib-compress');
     grunt.loadNpmTasks('grunt-contrib-copy');
-    grunt.loadNpmTasks('grunt-contrib-jasmine');
-    grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-contrib-clean');
-    grunt.loadNpmTasks("grunt-jscs");
     grunt.loadNpmTasks('grunt-strip-code');
     grunt.loadNpmTasks('grunt-text-replace');
 
     grunt.registerTask('test', [
         'bower:install',
-        'jshint:grunt',
-        'jshint:pre',
-        'jshint:test',
-        'jscs:widget',
-        'jasmine:coverage'
+        'eslint',
+        'karma:coverage'
+    ]);
+
+    grunt.registerTask('build', [
+        'clean:temp',
+        'copy',
+        'strip_code',
+        'compress'
     ]);
 
     grunt.registerTask('default', [
         'test',
-        'jshint:build',
-        'clean:temp',
-        'copy:main',
-        'strip_code',
-        'replace:version',
-        'compress:widget'
+        'build'
     ]);
 
-    grunt.registerTask('operator', [
-        'bower:install',
-        'jshint:shared',
-        'jscs:shared',
-        'jshint:operator',
-        'jscs:operator',
-        'clean:temp',
-        'copy:shared',
-        'copy:operator',
-        'strip_code',
-        'replace:versionoperator',
-        'compress:operator'
+    grunt.registerTask('publish', [
+        'default',
+        'wirecloud'
     ]);
+
 };

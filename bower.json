@@ -1,12 +1,11 @@
 {
   "name": "ckan-graph-creator",
-  "dependencies": {},
+  "dependencies": {
+    "jquery": "~2.1.4"
+  },
   "exportsOverride": {
     "jquery": {
       "js": "dist/jquery.min.js"
     }
-  },
-  "devDependencies": {
-    "jasmine-jquery": "2.0.6"
   }
 }

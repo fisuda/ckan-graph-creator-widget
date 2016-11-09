@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 CoNWeT Lab., Universidad Politécnica de Madrid
+ * Copyright (c) 2014-2016 CoNWeT Lab., Universidad Politécnica de Madrid
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,23 +14,15 @@
  * limitations under the License.
  */
 
-/* global $, MockMP */
+/* globals $, MockMP */
 
 
 (function () {
 
     "use strict";
 
-    jasmine.getFixtures().fixturesPath = 'src/test/fixtures/';
-
-    var dependencyList = [
-        'script',
-        'div#jasmine-fixtures',
-        'div.jasmine_html-reporter'
-    ];
-
     var clearDocument = function clearDocument() {
-        $('body > *:not(' + dependencyList.join(', ') + ')').remove();
+        document.body.innerHTML = "";
     };
 
     var getWiringCallback = function getWiringCallback(endpoint) {
@@ -53,7 +45,6 @@
 
 
         beforeEach(function () {
-            loadFixtures('index.html');
 
             window.MashupPlatform.widget.outputs = {
                 "flotr2-graph-config": {

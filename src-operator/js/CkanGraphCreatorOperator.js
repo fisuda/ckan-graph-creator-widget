@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 CoNWeT Lab., Universidad Politécnica de Madrid
+ * Copyright (c) 2014-2016 CoNWeT Lab., Universidad Politécnica de Madrid
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,31 +14,20 @@
  * limitations under the License.
  */
 
-/*global MashupPlatform, Flotr2Configurer, GoogleChartConfigurer*/
-/*exported CkanGraphCreatorOperator*/
+/* globals MashupPlatform, Flotr2Configurer, GoogleChartConfigurer */
+/* exported CkanGraphCreatorOperator */
 
 window.CkanGraphCreatorOperator = (function () {
+
     "use strict";
 
-    /*********************************************************
-     ************************CONSTANTS*************************
-     *********************************************************/
-
-    /*********************************************************
-     ************************VARIABLES*************************
-     *********************************************************/
-
-    /********************************************************/
-    /**********************CONSTRUCTOR***********************/
-    /********************************************************/
-
-    var CkanGraphCreatorOperator = function CkanGraphCreatorOperator () {
+    var CkanGraphCreatorOperator = function CkanGraphCreatorOperator() {
         this.layout = null;
         this.group_title = null;
         this.series_title = null;
         this.group_axis_select = null;
         this.series_div = null;
-        this.dataset = null;     //The dataset to be used. {structure: {...}, data: {...}}
+        this.dataset = null;     // Dataset to be used: {structure: {...}, data: {...}, metadata: {...}}
         this.column_info = null;
         this._3axis_alternative = null;
 
@@ -51,9 +40,6 @@ window.CkanGraphCreatorOperator = (function () {
 
     };
 
-    /*********************************************************
-     **************************PRIVATE*************************
-     *********************************************************/
 
     var showSeriesInfo = function showSeriesInfo(dataset_json) {
         this.dataset = JSON.parse(dataset_json);
@@ -68,7 +54,7 @@ window.CkanGraphCreatorOperator = (function () {
     };
 
     var get_general_series = function get_general_series() {
-        //Get the series from prefs
+        // Get the series from prefs
         return JSON.parse(MashupPlatform.prefs.get('graph_series'));
     };
 
@@ -122,10 +108,6 @@ window.CkanGraphCreatorOperator = (function () {
         MashupPlatform.wiring.pushEvent('googlecharts-graph-config', JSON.stringify(config));
 
     };
-
-    /****************************************/
-    /************AUXILIAR FUNCTIONS**********/
-    /****************************************/
 
     /* test-code */
     CkanGraphCreatorOperator.prototype = {
