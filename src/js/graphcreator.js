@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-/* globals GraphSelector, StyledElements, HighChartConfigurer */
+/* globals GraphSelector, StyledElements, HighChartConfigurer, GoogleChartConfigurer, Flotr2Configurer */
 
 
 window.Widget = (function () {
@@ -37,6 +37,8 @@ window.Widget = (function () {
         this._3axis_alternative = null;
 
         this.HighChartConfig = new HighChartConfigurer();
+        this.GoogleChartConfig = new GoogleChartConfigurer();
+        this.Flotr2Config = new Flotr2Configurer();
 
         // Recieve events for the "dataset" input endpoint
         MashupPlatform.wiring.registerCallback('dataset', function (data) {
@@ -144,18 +146,9 @@ window.Widget = (function () {
             window.console.log("Error");
         }
         var elementtype = "." + elements[0].classList[1];
-        var searchIn = function searchIn(list, elem) {
-            var i;
-            for (i = 0; i < list.length; i++) {
-                if (elem === list[i]) {
-                    return true;
-                }
-            }
-            return false;
-        };
 
-        var googleHave = searchIn(selectorsGoogleCharts, elementtype);
-        var flotr2Have = searchIn(selectorsFlotr2, elementtype);
+        var googleHave = this.GoogleChartConfig.hasSelector(elementtype);
+        var flotr2Have = this.Flotr2Config.hasSelector(elementtype);
 
         this.googleButton.disable();
         this.flotr2Button.disable();
@@ -315,14 +308,13 @@ window.Widget = (function () {
         // Check that endpoints are connected
         disable_all.call(this);
         if (MashupPlatform.widget.outputs["flotr2-graph-config"].connected) {
-            enable_graphs_flotr2.call(this);
+            this.Flotr2Config.enable();
         }
         if (MashupPlatform.widget.outputs['googlecharts-graph-config'].connected) {
-            enable_graphs_googlecharts.call(this);
+            this.GoogleChartConfig.enable();
         }
         if (MashupPlatform.widget.outputs['highcharts-graph-config'].connected) {
             this.HighChartConfig.enable();
-            // enable_graphs_highcharts.call(this);
         }
     };
 
@@ -365,9 +357,15 @@ window.Widget = (function () {
 
         if (series.length > 0) {
             this.workspace_tab.enable();
-            create_flotr2_config.call(this, series);
-            create_google_charts_config.call(this, series);
-            create_highcharts_config.call(this, series);
+            if (MashupPlatform.widget.outputs["flotr2-graph-config"].connected) {
+                create_flotr2_config.call(this, series);
+            }
+            if (MashupPlatform.widget.outputs['googlecharts-graph-config'].connected) {
+                create_google_charts_config.call(this, series);
+            }
+            if (MashupPlatform.widget.outputs['highcharts-graph-config'].connected) {
+                create_highcharts_config.call(this, series);
+            }
         }
     };
 
@@ -378,235 +376,39 @@ window.Widget = (function () {
         });
     };
 
-    var selectorsFlotr2 = [
-        '.lineargraph',
-        '.linechart',
-        '.radarchart',
-        '.areagraph',
-        '.areachart',
-        '.columngraph',
-        '.columnchart',
-        '.columnchart-stacked',
-        '.bargraph',
-        '.barchart',
-        '.barchart-stacked',
-        '.scattergraph',
-        '.bubblechart',
-        '.piegraph',
-        '.piechart'
-    ];
-
-    // var selectorsHighCharts = [
-    //     '.piegraph',
-    //     '.piechart'
-    // ];
-
-    var selectorsGoogleCharts = [
-        '.lineargraph',
-        '.linechart',
-        '.linechart-smooth',
-        '.combochart',
-        '.areagraph',
-        '.areachart',
-        '.areachart-stacked',
-        '.steppedareachart',
-        '.columngraph',
-        '.columnchart',
-        '.columnchart-stacked',
-        '.histogram',
-        '.bargraph',
-        '.barchart',
-        '.barchart-stacked',
-        '.scattergraph',
-        '.scatterchart',
-        '.bubblechart',
-        '.piegraph',
-        '.piechart',
-        '.piechart-3d',
-        '.donutchart',
-        '.geograph',
-        '.geochart',
-        '.geochart-markers'
-    ];
-
-    var enable_graphs_flotr2 = function enable_graphs_flotr2() {
-        var graphsFlotr2 = document.body.querySelectorAll(selectorsFlotr2);
-
-        for (var i = 0; i < graphsFlotr2.length; i++) {
-            graphsFlotr2[i].classList.remove("disabled");
-        }
-    };
-
-    var enable_graphs_googlecharts = function enable_graphs_googlecharts() {
-        var graphsGoogle = document.body.querySelectorAll(selectorsGoogleCharts);
-
-        for (var j = 0; j < graphsGoogle.length; j++) {
-            graphsGoogle[j].classList.remove("disabled");
-        }
-    };
-
-    // var enable_graphs_highcharts = function enable_graphs_highcharts() {
-    //     var graphsHighcharts = document.body.querySelectorAll(selectorsHighCharts);
-
-    //     for (var j = 0;  j < graphsHighcharts.length; j++) {
-    //         graphsHighcharts[j].classList.remove("disabled");
-    //     }
-    // };
-
     var create_flotr2_config = function create_flotr2_config(series) {
-        var i, j, row;
-        var graph_type = this.current_graph_type;
-        var group_column = this.group_axis_select.getValue();
-        var data = {};        // Contains all the series that wil be shown in the graph
-        var ticks = [];       // When string are used as group column, we need to format the values
-        var series_meta = {}; // Contails the name of the datasets
-        var group_column_axis = (graph_type == 'bargraph') ? 'yaxis' : 'xaxis';
 
-        // Group Column type
-        var group_column_type = null;
-        for (i = 0; i < this.dataset.structure.length && group_column_type == null; i++) {
-            var field = this.dataset.structure[i];
-            if (field.id == group_column) {
-                group_column_type = field.type;
-            }
-        }
-
-        // Is the Group Column an interger or a float?
-        var group_column_float = false;
-        for (i = 0; i < this.dataset.data.length && !group_column_float; i++) {
-            row = this.dataset.data[i];
-            if (row[group_column] % 1 !== 0) {
-                group_column_float = true;
-            }
-        }
-
-        // Create the series
-        for (i = 0; i < series.length; i++) {
-            data[i] = [];
-            series_meta[i] = {
-                label: series[i]
-            };
-        }
-
-        if (graph_type === 'bubblechart') {
-            var axisx_field = this.axisx_select.getValue();
-            var axisy_field = this.axisy_select.getValue();
-            var axisz_field = this.axisz_select.getValue();
-            var series_field = this.series_field_select.getValue();
-
-            for (j = 0; j < this.dataset.data.length; j++) {
-                row = this.dataset.data[j];
-                var serie = row[series_field];
-                data[series.indexOf(serie)].push([Number(row[axisx_field]), Number(row[axisy_field]) , Number(row[axisz_field])]);
-            }
-        } else {
-            for (i = 0; i < series.length; i++) {
-                for (j = 0; j < this.dataset.data.length; j++) {
-                    row = this.dataset.data[j];
-                    var group_column_value = row[group_column];
-
-                    // Numbers codified as strings must be transformed in real JS numbers
-                    // Just in case the previous widget/operator hasn't done it.
-                    switch (group_column_type) {
-                    case 'number':
-                        group_column_value = Number(group_column_value);
-                        break;
-                    default:
-                        // Ticks should be only introduced once
-                        if (i === 0) {
-                            ticks.push([j, group_column_value]);
-                        }
-                        group_column_value = j;
-                        break;
-                    }
-
-                    // In the bars graph the data should be encoded the other way around
-                    // Transformation into numbers is automatic since a graph should be
-                    // build with numbers
-                    if (graph_type === 'bargraph') {
-                        data[i].push([Number(row[series[i]]), group_column_value]);
-                    } else {
-                        data[i].push([group_column_value, Number(row[series[i]])]);
-                    }
-                }
-            }
-        }
-
-        // FlotR2 configuration
-        var htmltext = false;
-        var flotr2Config = {
-            config: {
-                mouse: {
-                    track: true,
-                    relative: true
-                },
-                HtmlText: htmltext
+        var config = this.Flotr2Config.configure(series, {
+            graph_type: this.current_graph_type,
+            dataset: this.dataset,
+            fields: {
+                axisx: this.axisx_select.getValue(),
+                axisy: this.axisy_select.getValue(),
+                axisz: this.axisz_select.getValue(),
+                series_field: this.series_field_select.getValue(),
+                group_column: this.group_axis_select.getValue(),
             },
-            datasets: series_meta,
-            data: data
-        };
+        });
 
-        // Configure the group column (X except for when selected graph is a Bar chart)
-        flotr2Config.config[group_column_axis] = {
-            labelsAngle: 45,
-            ticks: ticks.length !== 0 ? ticks : null,
-            noTicks: data[0].length,
-            title: group_column,
-            showLabels: true,
-            // If the group_column data contains at least one float: 2 decimals. Otherwise: 0
-            tickDecimals: group_column_float ? 2 : 0
-        };
-
-        if (['linechart', 'areachart'].indexOf(graph_type) !== -1) {
-            flotr2Config.config.lines = {
-                show: true,
-                fill: graph_type === 'areachart'
-            };
-
-        } else if (graph_type === 'radarchart') {
-            flotr2Config.config.radar = {
-                show: true
-            };
-            flotr2Config.config.grid = {
-                circular: true,
-                minorHorizontalLines: true
-            };
-
-        } else if (['columnchart', 'columnchart-stacked', 'barchart', 'barchart-stacked'].indexOf(graph_type) !== -1) {
-            var horizontal = ['barchart', 'barchart-stacked'].indexOf(graph_type) !== -1;
-            var stacked = ['columnchart-stacked', 'barchart-stacked'].indexOf(graph_type) !== -1;
-
-            flotr2Config.config.bars = {
-                show: true,
-                horizontal: horizontal,
-                stacked: stacked,
-                barWidth: 0.5,
-                lineWidth: 1,
-                shadowSize: 0
-            };
-
-        } else if (graph_type === 'bubblechart') {
-            flotr2Config.config.bubbles = {
-                show: true,
-                baseRadius: 5
-            };
-
-        } else if (graph_type === 'piechart') {
-            flotr2Config.config.pie = {
-                show: true,
-                explode: 6
-            };
-        }
-
-        MashupPlatform.wiring.pushEvent('flotr2-graph-config', JSON.stringify(flotr2Config));
+        MashupPlatform.wiring.pushEvent('flotr2-graph-config', JSON.stringify(config));
     };
 
-    var parse_google_data = function parse_google_data(column, value) {
-        if (this.column_info[column].type === 'number') {
-            return Number(value);
-        } else {
-            return value;
-        }
+    var create_google_charts_config = function create_google_charts_config(series) {
+
+        var config = this.GoogleChartConfig.configure(series, {
+            graph_type: this.current_graph_type,
+            dataset: this.dataset,
+            column_info: this.column_info,
+            fields: {
+                axisx: this.axisx_select.getValue(),
+                axisy: this.axisy_select.getValue(),
+                axisz: this.axisz_select.getValue(),
+                series_field: this.series_field_select.getValue(),
+                group_column: this.group_axis_select.getValue(),
+            },
+        });
+
+        MashupPlatform.wiring.pushEvent('googlecharts-graph-config', JSON.stringify(config));
     };
 
     var create_highcharts_config = function create_highcharts_config(series) {
@@ -617,178 +419,8 @@ window.Widget = (function () {
             dataset: this.dataset,
             column_info: this.column_info
         });
-        // var j, i;
-        // var graph_type = this.current_graph_type;
-        // var group_column = this.group_axis_select.getValue();
-        // var HighChartConfig = {
-        //     chart: {
-        //         plotBackgroundColor: null,
-        //         plotBorderWidth: null,
-        //         plotShadow: false
-        //     },
-        //     title: {
-        //         text: this.series_title
-        //     },
-        //     tooltip: {
-        //         pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
-        //     },
-        //     plotOptions: {
-        //         series: {
-        //             dataLabels: {
-        //                 enabled: true,
-        //                 format: '{point.name}: {point.y}'
-        //             }
-        //         }
-        //     }
-        // };
-
-        // var fulldata = [];
-        // var drills = [];
-        // var datasets = this.dataset.data;
-        // for (j = 0; j < series.length; j++) {
-        //     var nameRow = series[j];
-        //     var serieInfo = {
-        //         name: nameRow,
-        //         drilldown: nameRow,
-        //         y: 100
-        //     };
-        //     var sum = 0;
-
-        //     var drillI = {
-        //         name: nameRow,
-        //         id: nameRow,
-        //         data: []
-        //     };
-
-        //     for (i = 0; i < datasets.length; i++) {
-        //         var value = parse_google_data.call(this, nameRow, datasets[i][nameRow]);
-        //         var drillD = [datasets[i][group_column], value];
-        //         sum = sum + value;
-        //         drillI.data.push(drillD);
-        //     }
-        //     serieInfo.y = sum;
-
-        //     drills.push(drillI);
-        //     fulldata.push(serieInfo);
-        // }
-
-        // if (graph_type === 'piechart') {
-        //     HighChartConfig.chart.type = 'pie';
-        //     HighChartConfig.plotOptions.pie = {
-        //         allowPointSelect: true,
-        //         cursor: 'pointer',
-        //         dataLabels: {
-        //             enabled: false
-        //         },
-        //         showInLegend: true
-        //     };
-        //     HighChartConfig.series = [{
-        //         name: this.dataset.metadata.name || "",
-        //         colorByPoint: true,
-        //         data: fulldata
-        //     }];
-        //     HighChartConfig.drilldown = {
-        //         series: drills
-        //     };
-        // }
 
         MashupPlatform.wiring.pushEvent('highcharts-graph-config', JSON.stringify(config));
-    };
-
-    var create_google_charts_config = function create_google_charts_config(series) {
-        var i, j, dataset_row, row;
-        var graph_type = this.current_graph_type;
-        var group_column = this.group_axis_select.getValue();
-        var data = [];        // Contains all the series that wil be shown in the graph
-
-        // Format data
-        if (graph_type === 'bubblechart') {
-            var axisx_field = this.axisx_select.getValue();
-            var axisy_field = this.axisy_select.getValue();
-            var axisz_field = this.axisz_select.getValue();
-            var series_field = this.series_field_select.getValue();
-            var id_bubble = this.id_bubble_select.getValue();
-
-            // Header
-            data.push([id_bubble, axisx_field, axisy_field, series_field, axisz_field]);
-            // Data
-            for (j = 0; j < this.dataset.data.length; j++) {
-                row = this.dataset.data[j];
-                var serie = row[series_field];
-                data.push([row[id_bubble], Number(row[axisx_field]), Number(row[axisy_field]), serie, Number(row[axisz_field])]);
-            }
-        } else {
-            data.push([group_column].concat(series));
-            for (i = 0; i < this.dataset.data.length; i++) {
-                dataset_row = this.dataset.data[i];
-                row = [parse_google_data.call(this, group_column, dataset_row[group_column])];
-                for (j = 0; j < series.length; j++) {
-                    row.push(parse_google_data.call(this, series[j], dataset_row[series[j]]));
-                }
-                data.push(row);
-            }
-        }
-
-        // Google Charts base configuration
-        var googlechartsConfig = {
-            options: {},
-            data: data
-        };
-
-        // Chart specific configurations
-        if (['linechart', 'linechart-smooth'].indexOf(graph_type) !== -1) {
-            googlechartsConfig.type = 'LineChart';
-            if (graph_type === 'linechart-smooth') {
-                googlechartsConfig.options.curveType = 'function';
-            }
-
-        } else if (graph_type === 'combochart') {
-            // TODO
-            googlechartsConfig.type = 'ComboChart';
-            googlechartsConfig.options.seriesType = 'bars';
-            googlechartsConfig.options.series =  googlechartsConfig.type = 'line';
-            // END TODO
-
-        } else if (['areachart', 'areachart-stacked'].indexOf(graph_type) !== -1) {
-            googlechartsConfig.type = 'AreaChart';
-            googlechartsConfig.options.isStacked = graph_type === 'areachart-stacked';
-
-        } else if (graph_type === 'steppedareachart') {
-            googlechartsConfig.type = 'SteppedAreaChart';
-
-        } else if (['columnchart', 'columnchart-stacked'].indexOf(graph_type) !== -1) {
-            googlechartsConfig.type = 'ColumnChart';
-            googlechartsConfig.options.isStacked = graph_type === 'columnchart-stacked';
-
-        } else if (['barchart', 'barchart-stacked'].indexOf(graph_type) !== -1) {
-            googlechartsConfig.type = 'BarChart';
-            googlechartsConfig.options.isStacked = graph_type === 'barchart-stacked';
-
-        } else if (graph_type === 'histogram') {
-            googlechartsConfig.type = 'Histogram';
-
-        } else if (graph_type === 'scatterchart') {
-            googlechartsConfig.type = 'ScatterChart';
-
-        } else if (graph_type === 'bubblechart') {
-            googlechartsConfig.type = 'BubbleChart';
-            googlechartsConfig.options.bubble = {textStyle: {fontSize: 11}};
-
-        } else if (['piechart', 'piechart-3d', 'donutchart'].indexOf(graph_type) !== -1) {
-            googlechartsConfig.type = 'PieChart';
-            googlechartsConfig.options.is3D = graph_type === 'piechart-3d';
-            if (graph_type === 'donutchart') {
-                googlechartsConfig.options.pieHole = 0.5;
-            }
-
-        } else if (['geochart', 'geochart-markers'].indexOf(graph_type) !== -1) {
-            googlechartsConfig.type = 'GeoChart';
-            if (graph_type === 'geochart-markers') {
-                googlechartsConfig.displayMode = 'markers';
-            }
-        }
-
-        MashupPlatform.wiring.pushEvent('googlecharts-graph-config', JSON.stringify(googlechartsConfig));
     };
 
     var showSeriesInfo = function showSeriesInfo(dataset_json) {

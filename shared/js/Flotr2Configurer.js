@@ -37,17 +37,26 @@ window.Flotr2Configurer = (function () {
         ];
 
         Flotr2Configurer.prototype.enable = function enable() {
-            /* TODO */
-            // var graphsFlotr2 = document.body.querySelectorAll(selectorsFlotr2);
+            var graphsFlotr2 = document.body.querySelectorAll(this.selectors);
 
-            //     for (var i = 0; i < graphsFlotr2.length; i++) {
-            //         graphsFlotr2[i].classList.remove("disabled");
-            //     }
+            for (var i = 0; i < graphsFlotr2.length; i++) {
+                graphsFlotr2[i].classList.remove("disabled");
+            }
+        };
+
+        Flotr2Configurer.prototype.hasSelector = function hasSelector(selector) {
+            var i;
+            for (i = 0; i < this.selectors.length; i++) {
+                if (selector === this.selectors[i]) {
+                    return true;
+                }
+            }
+            return false;
         };
 
         Flotr2Configurer.prototype.configure = function configure(series, options) {
             var i, j, row;
-            var graph_type = options.current_graph_type;
+            var graph_type = options.graph_type;
             var fields = options.fields;
             var group_column = fields.group_column;
             var data = {};        //Contains all the series that wil be shown in the graph
