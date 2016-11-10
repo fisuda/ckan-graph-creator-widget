@@ -207,6 +207,7 @@ module.exports = function (grunt) {
                         'test/vendor/*.js',
                         'test/helpers/*.js',
                         'src/js/!(main).js',
+                        'shared/js/*.js',
                         'test/js/*Spec.js'
                     ],
                     preprocessors: {

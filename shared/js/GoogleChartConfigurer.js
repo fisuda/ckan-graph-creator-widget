@@ -55,12 +55,21 @@ window.GoogleChartConfigurer = (function () {
         };
 
         GoogleChartConfigurer.prototype.enable = function enable() {
-            /* TODO */
-            // var graphsGoogle = document.body.querySelectorAll(this.selectors);
+            var graphsGoogle = document.body.querySelectorAll(this.selectors);
 
-            // for (var j = 0; j < graphsGoogle.length; j++) {
-            //     graphsGoogle[j].classList.remove("disabled");
-            // }
+            for (var j = 0; j < graphsGoogle.length; j++) {
+                graphsGoogle[j].classList.remove("disabled");
+            }
+        };
+
+        GoogleChartConfigurer.prototype.hasSelector = function hasSelector(selector) {
+            var i;
+            for (i = 0; i < this.selectors.length; i++) {
+                if (selector === this.selectors[i]) {
+                    return true;
+                }
+            }
+            return false;
         };
 
         GoogleChartConfigurer.prototype.configure = function configure(series, options) {
