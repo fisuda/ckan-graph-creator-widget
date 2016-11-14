@@ -31,10 +31,13 @@ window.Widget = (function () {
         this.series_title = null;
         this.current_graph_type = null;
         this.group_axis_select = null;
+        this.range_select = null;
         this.series_div = null;
         this.dataset = null;     // Dataset to be used: {structure: {...}, data: {...}, metadata: {...}}
         this.column_info = null;
         this._3axis_alternative = null;
+
+        this.fromColumnLabels = false;
 
         this.HighChartConfig = new HighChartConfigurer();
         this.GoogleChartConfig = new GoogleChartConfigurer();
@@ -59,24 +62,74 @@ window.Widget = (function () {
      * ================================================================================== */
 
     var build_normal_form_alternative = function build_normal_form_alternative(container) {
+        this.accordion = new StyledElements.Accordion({exclusive: true});
+        container.appendChild(this.accordion);
+        this.from_column = this.accordion.createContainer({title: "From column values"});
+        this.from_labels = this.accordion.createContainer({title: "From column labels"});
+
+        // On expand append the selectors to the current container.
+        this.from_column.addEventListener('expandChange', function (expander, expanded) {
+            if (expanded) {
+                this.from_labels.clear();
+
+                this.from_column.appendChild(group_title);
+                this.from_column.appendChild(this.group_axis_select);
+                this.from_column.appendChild(series_title);
+                this.from_column.appendChild(this.series_div);
+
+                this.fromColumnLabels = false;
+
+                // Plot the chart with the current configuration
+                create_graph_config();
+            }
+        }.bind(this));
+
+        // On expand append the selectors to the current container.
+        this.from_labels.addEventListener('expandChange', function (expander, expanded) {
+            if (expanded) {
+                this.from_column.clear();
+
+                this.from_labels.appendChild(group_title);
+                this.from_labels.appendChild(this.group_axis_select);
+                this.from_labels.appendChild(this.range_select);
+                this.from_labels.appendChild(series_title);
+                this.from_labels.appendChild(this.series_select);
+
+                this.fromColumnLabels = true;
+
+                // Plot the chart with the current configuration
+                create_graph_config();
+            }
+        }.bind(this));
+
         // Create the group column title
         var group_title = document.createElement('h3');
         group_title.innerHTML = 'Axis X';
-        container.appendChild(group_title);
+        this.from_column.appendChild(group_title);
 
         // Create the group column select
         this.group_axis_select = new StyledElements.Select({'class': 'full'});
         this.group_axis_select.addEventListener('change', create_graph_config.bind(this));
-        container.appendChild(this.group_axis_select);
+
+        this.series_select = new StyledElements.Select({'class': 'full'});
+        this.series_select.addEventListener('change', create_graph_config.bind(this));
+
+        this.range_select = new StyledElements.Select({'class': 'full'});
+        this.range_select.addEventListener('change', create_graph_config.bind(this));
 
         // Create the series title
         var series_title = document.createElement('h3');
         series_title.innerHTML = 'Axis Y';
-        container.appendChild(series_title);
 
         // Create the div where the series will be inserted
         this.series_div = document.createElement('div');
-        container.appendChild(this.series_div);
+
+        // Append them to the default container.
+        this.from_column.appendChild(group_title);
+        this.from_column.appendChild(this.group_axis_select);
+        this.from_column.appendChild(series_title);
+        this.from_column.appendChild(this.series_div);
+
     };
 
     var build_3axis_form_alternative = function build_3axis_form_alternative(container) {
@@ -323,11 +376,19 @@ window.Widget = (function () {
         var i;
         var series = [];
 
-        // Get the selected checkboxes
-        for (i = 0; i < series_checkboxes.length; i++) {
-            if (series_checkboxes[i].checked) {
-                series.push(series_checkboxes[i].value);
+        if (!this.fromColumnLabels) {
+            // Get the selected checkboxes
+            for (i = 0; i < series_checkboxes.length; i++) {
+                if (series_checkboxes[i].checked) {
+                    series.push(series_checkboxes[i].value);
+                }
             }
+        } else {
+            // Get series from column selector
+            var col = this.axisy_select.getValue();
+            this.dataset.data.forEach(function (row) {
+                series.push(row[col]);
+            });
         }
 
         return series;
@@ -377,54 +438,212 @@ window.Widget = (function () {
     };
 
     var create_flotr2_config = function create_flotr2_config(series) {
+        var config;
 
-        var config = this.Flotr2Config.configure(series, {
-            graph_type: this.current_graph_type,
-            dataset: this.dataset,
-            fields: {
-                axisx: this.axisx_select.getValue(),
-                axisy: this.axisy_select.getValue(),
-                axisz: this.axisz_select.getValue(),
-                series_field: this.series_field_select.getValue(),
-                group_column: this.group_axis_select.getValue(),
-            },
-        });
+        if (!this.fromColumnLabels) {
+            // Default behaviour
+            config = this.Flotr2Config.configure(series, {
+                graph_type: this.current_graph_type,
+                dataset: this.dataset,
+                column_info: this.column_info,
+                fields: {
+                    axisx: this.axisx_select.getValue(),
+                    axisy: this.axisy_select.getValue(),
+                    axisz: this.axisz_select.getValue(),
+                    series_field: this.series_field_select.getValue(),
+                    group_column: this.group_axis_select.getValue(),
+                },
+            });
+        } else {
+            // Build chart using column labels
+            var columnNames = Object.keys(this.column_info);
+            var rangeLow = columnNames.indexOf(this.group_axis_select.getValue());
+            var rangeHigh = columnNames.indexOf(this.range_select.getValue());
+
+            // If the range is not right, probably the user is not done configuring the graph.
+            if (rangeLow >= rangeHigh) {
+                return;
+            }
+
+            var structure = [];
+            structure.push({id: "newGroupedColumn", type: "string"});
+
+            var columns = {
+                newGroupedColumn: {id: "newGroupedColumn", type: "string"}
+            };
+            series.forEach(function (name) {
+                columns[name] = {id: name, type: "number"};
+                structure.push({id: name, type: "number"});
+            });
+
+            var range = [];
+            for (rangeLow; rangeLow < rangeHigh; rangeLow++) {
+                range.push(this.dataset.structure[rangeLow]);
+            }
+
+            var newData  = [];
+            var expandedColName = this.series_select.getValue();
+
+            range.forEach(function (date, index) {
+                var row = {newGroupedColumn: date.id};
+
+                this.dataset.data.forEach(function (d) {
+                    row[d[expandedColName]] = d[date.id];
+                });
+
+                newData.push(row);
+            }.bind(this));
+
+            config = this.Flotr2Config.configure(series, {
+                graph_type: this.current_graph_type,
+                dataset: {data: newData, structure: structure},
+                column_info: columns,
+                fields: {
+                    axisx: this.axisx_select.getValue(),
+                    axisy: this.axisy_select.getValue(),
+                    axisz: this.axisz_select.getValue(),
+                    series_field: this.series_field_select.getValue(),
+                    group_column: "newGroupedColumn",
+                },
+            });
+        }
 
         MashupPlatform.wiring.pushEvent('flotr2-graph-config', JSON.stringify(config));
     };
 
     var create_google_charts_config = function create_google_charts_config(series) {
+        var config;
 
-        var config = this.GoogleChartConfig.configure(series, {
-            graph_type: this.current_graph_type,
-            dataset: this.dataset,
-            column_info: this.column_info,
-            fields: {
-                axisx: this.axisx_select.getValue(),
-                axisy: this.axisy_select.getValue(),
-                axisz: this.axisz_select.getValue(),
-                series_field: this.series_field_select.getValue(),
-                group_column: this.group_axis_select.getValue(),
-            },
-        });
+        if (!this.fromColumnLabels) {
+            // Default behaviour
+            config = this.GoogleChartConfig.configure(series, {
+                graph_type: this.current_graph_type,
+                dataset: this.dataset,
+                column_info: this.column_info,
+                fields: {
+                    axisx: this.axisx_select.getValue(),
+                    axisy: this.axisy_select.getValue(),
+                    axisz: this.axisz_select.getValue(),
+                    series_field: this.series_field_select.getValue(),
+                    group_column: this.group_axis_select.getValue(),
+                },
+            });
+        } else {
+            // Build chart using column labels
+            var columnNames = Object.keys(this.column_info);
+            var rangeLow = columnNames.indexOf(this.group_axis_select.getValue());
+            var rangeHigh = columnNames.indexOf(this.range_select.getValue());
+
+            // If the range is not right, probably the user is not done configuring the graph.
+            if (rangeLow >= rangeHigh) {
+                return;
+            }
+
+            var columns = {
+                newGroupedColumn: {id: "newGroupedColumn", type: "string"}
+            };
+            series.forEach(function (name) {
+                columns[name] = {id: name, type: "number"};
+            });
+
+            var range = [];
+            for (rangeLow; rangeLow < rangeHigh; rangeLow++) {
+                range.push(this.dataset.structure[rangeLow]);
+            }
+
+            var newData  = [];
+            var expandedColName = this.series_select.getValue();
+
+            range.forEach(function (date, index) {
+                var row = {newGroupedColumn: date.id};
+
+                this.dataset.data.forEach(function (d) {
+                    row[d[expandedColName]] = d[date.id];
+                });
+
+                newData.push(row);
+            }.bind(this));
+
+            config = this.GoogleChartConfig.configure(series, {
+                graph_type: this.current_graph_type,
+                dataset: {data: newData},
+                column_info: columns,
+                fields: {
+                    axisx: this.axisx_select.getValue(),
+                    axisy: this.axisy_select.getValue(),
+                    axisz: this.axisz_select.getValue(),
+                    series_field: this.series_field_select.getValue(),
+                    group_column: "newGroupedColumn",
+                },
+            });
+        }
 
         MashupPlatform.wiring.pushEvent('googlecharts-graph-config', JSON.stringify(config));
     };
 
     var create_highcharts_config = function create_highcharts_config(series) {
-        var config = this.HighChartConfig.configure(series, {
-            graph_type: this.current_graph_type,
-            group_axis_select: this.group_axis_select,
-            series_title: this.series_title,
-            dataset: this.dataset,
-            column_info: this.column_info
-        });
+        var config;
+
+        if (!this.fromColumnLabels) {
+            // Default behaviour
+            config = this.HighChartConfig.configure(series, {
+                graph_type: this.current_graph_type,
+                group_axis_select: this.group_axis_select.getValue(),
+                series_title: this.series_title,
+                dataset: this.dataset,
+                column_info: this.column_info,
+            });
+        } else {
+            // Build chart using column labels
+            var columnNames = Object.keys(this.column_info);
+            var rangeLow = columnNames.indexOf(this.group_axis_select.getValue());
+            var rangeHigh = columnNames.indexOf(this.range_select.getValue());
+
+            // If the range is not right, probably the user is not done configuring the graph.
+            if (rangeLow >= rangeHigh) {
+                return;
+            }
+
+            var columns = {
+                newGroupedColumn: {id: "newGroupedColumn", type: "number"}
+            };
+            series.forEach(function (name) {
+                columns[name] = {id: name, type: "number"};
+            });
+
+            var range = [];
+            for (rangeLow; rangeLow < rangeHigh; rangeLow++) {
+                range.push(this.dataset.structure[rangeLow]);
+            }
+
+            var newData  = [];
+            var expandedColName = this.series_select.getValue();
+
+            range.forEach(function (date, index) {
+                var row = {newGroupedColumn: date.id};
+
+                this.dataset.data.forEach(function (d) {
+                    row[d[expandedColName]] = d[date.id];
+                });
+
+                newData.push(row);
+            }.bind(this));
+
+            config = this.HighChartConfig.configure(series, {
+                graph_type: this.current_graph_type,
+                dataset: {data: newData},
+                column_info: columns,
+                group_axis_select: "newGroupedColumn",
+            });
+
+        }
 
         MashupPlatform.wiring.pushEvent('highcharts-graph-config', JSON.stringify(config));
     };
 
     var showSeriesInfo = function showSeriesInfo(dataset_json) {
         this.dataset = JSON.parse(dataset_json);
+
         this.column_info = {};
 
         // Fields Name
@@ -445,6 +664,12 @@ window.Widget = (function () {
 
         this.group_axis_select.clear();
         this.group_axis_select.addEntries(entries);
+
+        this.range_select.clear();
+        this.range_select.addEntries(entries);
+
+        this.series_select.clear();
+        this.series_select.addEntries(entries);
 
         // TODO
         this.axisx_select.clear();

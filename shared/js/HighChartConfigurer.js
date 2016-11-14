@@ -42,7 +42,7 @@
 
     HighChartConfigurer.prototype.configure = function configure(series, options) {
         var graph_type = options.graph_type;
-        var group_column = options.group_axis_select.getValue();
+        var group_column = options.group_axis_select;
         var series_title = options.series_title;
         var column_info = options.column_info;
         var dataset = options.dataset;
