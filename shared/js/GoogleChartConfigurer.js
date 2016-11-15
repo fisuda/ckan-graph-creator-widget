@@ -167,7 +167,7 @@ window.GoogleChartConfigurer = (function () {
                 }
             }
 
-            googleChartsConfig.title = ""; // Blank title instead of "No title"
+            googlechartsConfig.title = ""; // Blank title instead of "No title"
 
             return googlechartsConfig;
         };
