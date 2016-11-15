@@ -19,8 +19,21 @@
 
     var HighChartConfigurer = function HighChartConfigurer() {
         this.selectors = [
+            '.lineargraph',
+            '.linechart',
+            '.linechart-smooth',
             '.piegraph',
-            '.piechart'
+            '.piechart',
+            '.donutchart',
+            '.columngraph',
+            '.columnchart',
+            '.columnchart-stacked',
+            '.areagraph',
+            '.areachart',
+            '.areachart-stacked',
+            '.bargraph',
+            '.barchart',
+            '.barchart-stacked',
         ];
     };
 
@@ -55,7 +68,7 @@
                 layout: 'vertical',
                 align: 'right',
                 verticalAlign: 'top',
-                labelFormat: "{name} <b>{percentage:.1f}%</b>",
+                labelFormat: "{name}",
                 y: 0,
                 x: 0,
                 navigation: {
@@ -69,15 +82,9 @@
                         fontSize: '12px'
                     }
                 },
-                title: {
-                    text: "Click to hide"
-                }
             },
             title: {
                 text: options.options.title
-            },
-            tooltip: {
-                pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
             },
             plotOptions: {
                 series: {
@@ -109,21 +116,73 @@
         }
 
         if (graph_type === 'piechart') {
-            config = configPieChart(config, rawdata, dataset.metadata);
+            config = configPieChart(config, rawdata);
         }
         if (graph_type === 'piechart-3d') {
-            config = config3dPieChart(config, rawdata, dataset.metadata);
+            config = config3dPieChart(config, rawdata);
         }
         if (graph_type === 'donutchart') {
-            config = configDonutChart(config, rawdata, dataset.metadata);
+            config = configDonutChart(config, rawdata);
+        }
+        if (graph_type === 'linechart') {
+            config = configTimelineChart(config, rawdata);
+        }
+        if (graph_type === 'linechart-smooth') {
+            config = configTimelineChart(config, rawdata);
+            config.chart.type = "spline"; // Same config as lineChart but spline type
+        }
+        if (graph_type === 'areachart') {
+            config = configTimelineChart(config, rawdata, series);
+            config.chart.type = "area"; // Same config as lineChart but area type
+        }
+        if (graph_type === 'areachart-stacked') {
+            config = configTimelineChart(config, rawdata, series);
+            config.chart.type = "area"; // Same config as lineChart but area type
+            config.plotOptions.area = { // Enable stacking
+                stacking: 'normal',
+            };
         }
         if (graph_type === 'columnchart') {
-            config = configBarChart(config, rawdata, dataset.metadata);
+            config = configTimelineChart(config, rawdata, series);
+            config.chart.type = "column"; // Same config as lineChart but area type
         }
+        if (graph_type === 'columnchart-stacked') {
+            config = configTimelineChart(config, rawdata, series);
+            config.chart.type = "column"; // Same config as lineChart but area type
+            config.plotOptions.column = { // Enable stacking
+                stacking: 'normal',
+            };
+        }
+        if (graph_type === 'barchart') {
+            config = configTimelineChart(config, rawdata, series);
+            config.chart.type = "bar"; // Same config as lineChart but area type
+        }
+        if (graph_type === 'barchart-stacked') {
+            config = configTimelineChart(config, rawdata, series);
+            config.chart.type = "bar"; // Same config as lineChart but area type
+            config.plotOptions.series = { // Enable stacking
+                stacking: 'normal',
+            };
+        }
+
         return config;
     };
 
+    // Clean data
+    var timelineData = function timelineData(data) {
+        var dataList = {};
+        dataList.timestamps = [];
+        data.forEach(function (row) {
+            row.data.forEach(function (d){
+                dataList.timestamps.push(d[0]); // Build timestamps list
+                d = d[1]; // Build data list
+            });
+        });
 
+        dataList.data = data;
+
+        return dataList;
+    };
 
     var flatData = function flatData(data) {
         var dataN = {};
@@ -177,7 +236,34 @@
         };
     };
 
-    var configBarChart = function configBarChart(config, data, metadata) {
+    var configTimelineChart = function configTimelineChart (config, data, series) {
+        config.chart.type = 'line';
+        var dataList = timelineData(data);
+
+        config.series = [];
+        dataList.data.forEach(function (d, i) {
+            config.series.push({
+                name: d.name,
+                data: d.data,
+            });
+        });
+
+        config.xAxis = {
+            categories: dataList.timestamps
+        };
+
+        config.plotOptions.series = {
+            borderWidth: 0,
+            dataLabels: {
+                enabled: true,
+                format: '{point.y}'
+            }
+        };
+
+        return config;
+    };
+
+    var configBarChart = function configBarChart(config, data) {
         config.chart.type = 'column';
         config.xAxis = {
             type: 'category'
@@ -197,7 +283,6 @@
         var outdata = dataP.data, drills = dataP.drills;
 
         config.series = [{
-            name: metadata.name || "",
             colorByPoint: true,
             data: outdata
         }];
@@ -212,7 +297,7 @@
 
     // };
 
-    var config3dPieChart = function config3dPieChart(config, data, metadata) {
+    var config3dPieChart = function config3dPieChart(config, data) {
         config.chart.type = 'pie';
         config.chart.options3d = {
             enabled: true,
@@ -231,16 +316,19 @@
             showInLegend: true
         };
 
+        config.tooltip = {
+            pointFormat: '<b>{point.percentage:.1f}%</b>'
+        };
+
         config.series = [{
             type: 'pie',
-            name: metadata.name || "",
             data: flatData(data)
         }];
 
         return config;
     };
 
-    var configDonutChart = function configDonutChart(config, data, metadata) {
+    var configDonutChart = function configDonutChart(config, data) {
         config.chart.type = 'pie';
         config.plotOptions.pie = {
             allowPointSelect: true,
@@ -252,17 +340,28 @@
             showInLegend: true
         };
 
+        config.tooltip = {
+            pointFormat: '<b>{point.percentage:.1f}%</b>'
+        };
+
+        var dataP = drillDownData(data);
+        var outdata = dataP.data, drills = dataP.drills;
+
         config.series = [{
-            name: metadata.name || "",
             colorByPoint: true,
-            data: flatData(data),
+            data: outdata,
             innerSize: '60%'
         }];
+
+        config.drilldown = {
+            series: drills
+        };
+
         return config;
     };
 
 
-    var configPieChart = function configPieChart(config, data, metadata) {
+    var configPieChart = function configPieChart(config, data) {
         config.chart.type = 'pie';
         config.plotOptions.pie = {
             allowPointSelect: true,
@@ -273,11 +372,14 @@
             showInLegend: true
         };
 
+        config.tooltip = {
+            pointFormat: '<b>{point.percentage:.1f}%</b>'
+        };
+
         var dataP = drillDownData(data);
         var outdata = dataP.data, drills = dataP.drills;
 
         config.series = [{
-            name: metadata.name || "",
             colorByPoint: true,
             data: outdata
         }];
