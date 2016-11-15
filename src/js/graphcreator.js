@@ -28,7 +28,6 @@ window.Widget = (function () {
     var Widget = function Widget() {
         this.layout = null;
         this.group_title = null;
-        this.series_title = null;
         this.current_graph_type = null;
         this.group_axis_select = null;
         this.range_select = null;
@@ -453,6 +452,9 @@ window.Widget = (function () {
                     series_field: this.series_field_select.getValue(),
                     group_column: this.group_axis_select.getValue(),
                 },
+                options: {
+                    title: this.dataset.metadata.name
+                },
             });
         } else {
             // Build chart using column labels
@@ -505,6 +507,9 @@ window.Widget = (function () {
                     series_field: this.series_field_select.getValue(),
                     group_column: "newGroupedColumn",
                 },
+                options: {
+                    title: this.dataset.metadata.name
+                },
             });
         }
 
@@ -526,6 +531,9 @@ window.Widget = (function () {
                     axisz: this.axisz_select.getValue(),
                     series_field: this.series_field_select.getValue(),
                     group_column: this.group_axis_select.getValue(),
+                },
+                options: {
+                    title: this.dataset.metadata.name
                 },
             });
         } else {
@@ -575,6 +583,9 @@ window.Widget = (function () {
                     series_field: this.series_field_select.getValue(),
                     group_column: "newGroupedColumn",
                 },
+                options: {
+                    title: this.dataset.metadata.name
+                },
             });
         }
 
@@ -589,9 +600,11 @@ window.Widget = (function () {
             config = this.HighChartConfig.configure(series, {
                 graph_type: this.current_graph_type,
                 group_axis_select: this.group_axis_select.getValue(),
-                series_title: this.series_title,
                 dataset: this.dataset,
                 column_info: this.column_info,
+                options: {
+                    title: this.dataset.metadata.name
+                },
             });
         } else {
             // Build chart using column labels
@@ -634,6 +647,9 @@ window.Widget = (function () {
                 dataset: {data: newData},
                 column_info: columns,
                 group_axis_select: "newGroupedColumn",
+                options: {
+                    title: this.dataset.metadata.name
+                },
             });
 
         }

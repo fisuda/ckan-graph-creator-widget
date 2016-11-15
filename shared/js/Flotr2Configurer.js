@@ -153,7 +153,7 @@ window.Flotr2Configurer = (function () {
                 labelsAngle: 45,
                 ticks: ticks.length !== 0 ? ticks : null,
                 noTicks: data[0].length,
-                title:  group_column,
+                title:  options.options.title,
                 showLabels: true,
                 //If the group_column data contains at least one float: 2 decimals. Otherwise: 0
                 tickDecimals: group_column_float ? 2 : 0

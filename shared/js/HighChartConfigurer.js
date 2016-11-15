@@ -43,7 +43,6 @@
     HighChartConfigurer.prototype.configure = function configure(series, options) {
         var graph_type = options.graph_type;
         var group_column = options.group_axis_select;
-        var series_title = options.series_title;
         var column_info = options.column_info;
         var dataset = options.dataset;
         var config = {
@@ -75,7 +74,7 @@
                 }
             },
             title: {
-                text: series_title
+                text: options.options.title
             },
             tooltip: {
                 pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
