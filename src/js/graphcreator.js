@@ -157,18 +157,18 @@ window.Widget = (function () {
         container.appendChild(this.axisz_select);
 
         group_title = document.createElement('h3');
-        group_title.innerHTML = 'Series field';
-        container.appendChild(group_title);
-        this.series_field_select = new StyledElements.Select({'class': 'full'});
-        this.series_field_select.addEventListener('change', create_graph_config.bind(this));
-        container.appendChild(this.series_field_select);
-
-        group_title = document.createElement('h3');
-        group_title.innerHTML = 'Name of the bubble';
+        group_title.innerHTML = 'Bubble tag';
         container.appendChild(group_title);
         this.id_bubble_select = new StyledElements.Select({'class': 'full'});
         this.id_bubble_select.addEventListener('change', create_graph_config.bind(this));
         container.appendChild(this.id_bubble_select);
+
+        group_title = document.createElement('h3');
+        group_title.innerHTML = 'Bubble name';
+        container.appendChild(group_title);
+        this.series_field_select = new StyledElements.Select({'class': 'full'});
+        this.series_field_select.addEventListener('change', create_graph_config.bind(this));
+        container.appendChild(this.series_field_select);
     };
 
 
@@ -521,6 +521,7 @@ window.Widget = (function () {
 
         if (!this.fromColumnLabels) {
             // Default behaviour
+
             config = this.GoogleChartConfig.configure(series, {
                 graph_type: this.current_graph_type,
                 dataset: this.dataset,
@@ -531,6 +532,7 @@ window.Widget = (function () {
                     axisz: this.axisz_select.getValue(),
                     series_field: this.series_field_select.getValue(),
                     group_column: this.group_axis_select.getValue(),
+                    id_bubble: this.id_bubble_select.getValue(),
                 },
                 options: {
                     title: this.dataset.metadata.name
