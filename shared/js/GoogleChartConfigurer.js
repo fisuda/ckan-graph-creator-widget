@@ -78,6 +78,7 @@ window.GoogleChartConfigurer = (function () {
             var fields = options.fields;
             var column_info = options.column_info;
             var group_column = fields.group_column;
+            var filter = options.filter;
             var data = [];        //Contains all the series that wil be shown in the graph
 
             // Format data
@@ -100,11 +101,18 @@ window.GoogleChartConfigurer = (function () {
                 data.push([group_column].concat(series));
                 for (i = 0; i < options.dataset.data.length; i++) {
                     dataset_row = options.dataset.data[i];
-                    row = [parseData(column_info, group_column, dataset_row[group_column])];
-                    for (j = 0; j < series.length; j++) {
-                        row.push(parseData(column_info, series[j], dataset_row[series[j]]));
+                    // Check if the filter is passed
+                    var xValue = parseData(column_info, group_column, dataset_row[group_column]);
+                    if (filter.every(function (f) {
+                        return f !== xValue;
+                    })) {
+                        // If it passes the filter, add it.
+                        row = [xValue];
+                        for (j = 0; j < series.length; j++) {
+                            row.push(parseData(column_info, series[j], dataset_row[series[j]]));
+                        }
+                        data.push(row);
                     }
-                    data.push(row);
                 }
             }
 
