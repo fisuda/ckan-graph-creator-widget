@@ -58,6 +58,7 @@
         var group_column = options.group_axis_select;
         var column_info = options.column_info;
         var dataset = options.dataset;
+        var filter = options.filter;
         var config = {
             chart: {
                 plotBackgroundColor: null,
@@ -108,9 +109,14 @@
             };
 
             for (j = 0; j < datasets.length; j++) {
-                var value = parseData(column_info, nameRow, datasets[j][nameRow]);
-                var dD = [datasets[j][group_column], value];
-                serieInfo.data.push(dD);
+                // Check if the filter is passed
+                if (filter.every(function (f) {
+                    return f !== datasets[j][group_column];
+                })) {
+                    var value = parseData(column_info, nameRow, datasets[j][nameRow]);
+                    var dD = [datasets[j][group_column], value];
+                    serieInfo.data.push(dD);
+                }
             }
             rawdata.push(serieInfo);
         }
