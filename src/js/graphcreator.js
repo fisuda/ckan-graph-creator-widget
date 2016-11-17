@@ -175,6 +175,11 @@ window.Widget = (function () {
         // Clear the div
         this.filterDiv.innerHTML = "";
 
+        // TODO: filters for bubblechart
+        if (this.current_graph_type === 'bubblechart') {
+            return;
+        }
+
 
         var titleX = document.createElement("h3");
         titleX.innerHTML = "Filter Axis X";
