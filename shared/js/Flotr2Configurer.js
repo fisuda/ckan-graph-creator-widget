@@ -63,6 +63,7 @@ window.Flotr2Configurer = (function () {
             var ticks = [];       //When string are used as group column, we need to format the values
             var series_meta = {}; //Contails the name of the datasets
             var group_column_axis = (graph_type == 'bargraph') ? 'yaxis' : 'xaxis';
+            var filter = options.filter;
 
             //Group Column type
             var group_column_type = null;
@@ -106,29 +107,33 @@ window.Flotr2Configurer = (function () {
                     for (j = 0; j < options.dataset.data.length; j++) {
                         row = options.dataset.data[j];
                         var group_column_value = row[group_column];
-
-                        //Numbers codified as strings must be transformed in real JS numbers
-                        //Just in case the previous widget/operator hasn't done it.
-                        switch (group_column_type) {
-                        case 'number':
-                            group_column_value = Number(group_column_value);
-                            break;
-                        default:
-                            //Ticks should be only introduced once
-                            if (i === 0) {
-                                ticks.push([j, group_column_value]);
+                        // Check if the filter is passed
+                        if (filter.every(function (f) {
+                            return f !== group_column_value;
+                        })) {
+                            //Numbers codified as strings must be transformed in real JS numbers
+                            //Just in case the previous widget/operator hasn't done it.
+                            switch (group_column_type) {
+                            case 'number':
+                                group_column_value = Number(group_column_value);
+                                break;
+                            default:
+                                //Ticks should be only introduced once
+                                if (i === 0) {
+                                    ticks.push([j, group_column_value]);
+                                }
+                                group_column_value = j;
+                                break;
                             }
-                            group_column_value = j;
-                            break;
-                        }
 
-                        //In the bars graph the data should be encoded the other way around
-                        //Transformation into numbers is automatic since a graph should be
-                        //build with numbers
-                        if (graph_type === 'bargraph') {
-                            data[i].push([Number(row[series[i]]), group_column_value]);
-                        } else {
-                            data[i].push([group_column_value, Number(row[series[i]])]);
+                            //In the bars graph the data should be encoded the other way around
+                            //Transformation into numbers is automatic since a graph should be
+                            //build with numbers
+                            if (graph_type === 'bargraph') {
+                                data[i].push([Number(row[series[i]]), group_column_value]);
+                            } else {
+                                data[i].push([group_column_value, Number(row[series[i]])]);
+                            }
                         }
                     }
                 }
