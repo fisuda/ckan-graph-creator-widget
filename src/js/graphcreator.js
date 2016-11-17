@@ -171,6 +171,74 @@ window.Widget = (function () {
         container.appendChild(this.series_field_select);
     };
 
+    var buildFiltersDiv = function buildFiltersDiv() {
+        // Clear the div
+        this.filterDiv.innerHTML = "";
+
+
+        var titleX = document.createElement("h3");
+        titleX.innerHTML = "Filter Axis X";
+        var divX = document.createElement("div");
+
+        var titleY = document.createElement("h3");
+        titleY.innerHTML = "Filter Axis Y";
+        var divY = document.createElement("div");
+
+        var series = get_general_series.call(this);
+
+        if (!this.fromColumnLabels) {
+            var XCol = this.group_axis_select.getValue();
+
+            // Build X filters
+            this.dataset.data.forEach(function (row) {
+                var checkbox = buildCheckbox.call(this, "filtersX", row[XCol]);
+                divX.append(checkbox);
+                divX.appendChild(document.createElement('br'));
+            }.bind(this));
+        } else {
+
+            // Build  X filters
+            var columnNames = Object.keys(this.column_info);
+            var rangeLow = columnNames.indexOf(this.group_axis_select.getValue());
+            var rangeHigh = columnNames.indexOf(this.range_select.getValue());
+            for (rangeLow; rangeLow < rangeHigh; rangeLow++) {
+                var checkbox = buildCheckbox.call(this, "filtersX", this.dataset.structure[rangeLow].id);
+                divX.append(checkbox);
+                divX.appendChild(document.createElement('br'));
+            }
+
+            // Build Y filters
+            series.forEach(function (value) {
+                var checkbox = buildCheckbox.call(this, "filtersY", value);
+                divY.append(checkbox);
+                divY.appendChild(document.createElement('br'));
+            }.bind(this));
+        }
+
+        this.filterDiv.appendChild(titleX);
+        this.filterDiv.appendChild(divX);
+        this.filterDiv.appendChild(titleY);
+        this.filterDiv.appendChild(divY);
+
+        // Update the graph using no filters
+        create_graph_config.call(this);
+    };
+
+    var buildCheckbox = function buildCheckbox(name, value) {
+        var label = document.createElement('label');
+
+        var checkbox = document.createElement('input');
+        checkbox.setAttribute('type', 'checkbox');
+        checkbox.setAttribute('name', name);
+        checkbox.setAttribute('value', value);
+        checkbox.addEventListener('change', create_graph_config.bind(this));
+
+        label.appendChild(checkbox);
+        label.appendChild(document.createTextNode(value));
+
+        return label;
+    };
+
 
     var showMsg = function showMsg(msg, type, callback) {
         var alertDiv = document.getElementById("alert");
@@ -282,7 +350,9 @@ window.Widget = (function () {
 
         var chart_tab = this.layout.createTab({name: "1. Chart", closable: false});
         this.data_tab = this.layout.createTab({name: "2. Data", closable: false});
-        this.workspace_tab = this.layout.createTab({name: "3. Dashboard", closable: false});
+        var config_tab = this.layout.createTab({name: "3. Configuration", closable: false});
+
+        this.workspace_tab = this.layout.createTab({name: "4. Dashboard", closable: false});
         this.data_tab.disable();
         this.workspace_tab.disable();
         this.workspace_tab.getTabElement().addEventListener("click", enable_mashup_buttons.bind(this), false);
@@ -345,6 +415,19 @@ window.Widget = (function () {
             }
             create_graph_config.call(this);
         }.bind(this));
+
+
+        config_tab.getTabElement().addEventListener("click", buildFiltersDiv.bind(this));
+        // Title input field
+        var title = document.createElement('h3');
+        title.innerHTML = 'Chart title';
+        this.titleInput = new StyledElements.TextField({placeholder: "Chart title"});
+        this.titleInput.addEventListener("submit", create_graph_config.bind(this));
+        config_tab.appendChild(title);
+        config_tab.appendChild(this.titleInput);
+
+        this.filterDiv = document.createElement('div');
+        config_tab.appendChild(this.filterDiv);
 
         update_available_wiring.call(this);
         MashupPlatform.wiring.registerStatusCallback(update_available_wiring.bind(this));
@@ -436,8 +519,30 @@ window.Widget = (function () {
         });
     };
 
+    var applyFilters = function applyFilters() {
+        var i;
+        var x = [];
+        var xcheckboxes = document.getElementsByName('filtersX');
+        for (i = 0; i < xcheckboxes.length; i++) {
+            if (xcheckboxes[i].checked) {
+                x.push(xcheckboxes[i].value);
+            }
+        }
+
+        var y = [];
+        var ycheckboxes = document.getElementsByName('filtersY');
+        for (i = 0; i < ycheckboxes.length; i++) {
+            if (ycheckboxes[i].checked) {
+                y.push(ycheckboxes[i].value);
+            }
+        }
+
+        return {x: x, y: y};
+    };
+
     var create_flotr2_config = function create_flotr2_config(series) {
         var config;
+        var filters = applyFilters();
 
         if (!this.fromColumnLabels) {
             // Default behaviour
@@ -452,6 +557,7 @@ window.Widget = (function () {
                     series_field: this.series_field_select.getValue(),
                     group_column: this.group_axis_select.getValue(),
                 },
+                filter: filters.x,
                 options: {
                     title: this.dataset.metadata.name
                 },
@@ -461,10 +567,9 @@ window.Widget = (function () {
             var columnNames = Object.keys(this.column_info);
             var rangeLow = columnNames.indexOf(this.group_axis_select.getValue());
             var rangeHigh = columnNames.indexOf(this.range_select.getValue());
-
-            // If the range is not right, probably the user is not done configuring the graph.
-            if (rangeLow >= rangeHigh) {
-                return;
+            var range = [];
+            for (rangeLow; rangeLow < rangeHigh; rangeLow++) {
+                range.push(this.dataset.structure[rangeLow].id);
             }
 
             var structure = [];
@@ -478,25 +583,31 @@ window.Widget = (function () {
                 structure.push({id: name, type: "number"});
             });
 
-            var range = [];
-            for (rangeLow; rangeLow < rangeHigh; rangeLow++) {
-                range.push(this.dataset.structure[rangeLow]);
-            }
-
             var newData  = [];
             var expandedColName = this.series_select.getValue();
 
+            // Create the new set of data to be used
             range.forEach(function (date, index) {
-                var row = {newGroupedColumn: date.id};
+                var row = {newGroupedColumn: date};
 
                 this.dataset.data.forEach(function (d) {
-                    row[d[expandedColName]] = d[date.id];
+                    row[d[expandedColName]] = d[date];
                 });
 
                 newData.push(row);
             }.bind(this));
 
-            config = this.Flotr2Config.configure(series, {
+            // Filter the series
+            var filteredSeries = [];
+            series.forEach(function (s) {
+                if (filters.y.every(function (f) {
+                    return f !== s;
+            })) {
+                    filteredSeries.push(s);
+                }
+            });
+
+            config = this.Flotr2Config.configure(filteredSeries, {
                 graph_type: this.current_graph_type,
                 dataset: {data: newData, structure: structure},
                 column_info: columns,
@@ -507,6 +618,7 @@ window.Widget = (function () {
                     series_field: this.series_field_select.getValue(),
                     group_column: "newGroupedColumn",
                 },
+                filter: filters.x,
                 options: {
                     title: this.dataset.metadata.name
                 },
@@ -518,6 +630,7 @@ window.Widget = (function () {
 
     var create_google_charts_config = function create_google_charts_config(series) {
         var config;
+        var filters = applyFilters();
 
         if (!this.fromColumnLabels) {
             // Default behaviour
@@ -534,6 +647,7 @@ window.Widget = (function () {
                     group_column: this.group_axis_select.getValue(),
                     id_bubble: this.id_bubble_select.getValue(),
                 },
+                filter: filters.x,
                 options: {
                     title: this.dataset.metadata.name
                 },
@@ -543,10 +657,9 @@ window.Widget = (function () {
             var columnNames = Object.keys(this.column_info);
             var rangeLow = columnNames.indexOf(this.group_axis_select.getValue());
             var rangeHigh = columnNames.indexOf(this.range_select.getValue());
-
-            // If the range is not right, probably the user is not done configuring the graph.
-            if (rangeLow >= rangeHigh) {
-                return;
+            var range = [];
+            for (rangeLow; rangeLow < rangeHigh; rangeLow++) {
+                range.push(this.dataset.structure[rangeLow].id);
             }
 
             var columns = {
@@ -556,25 +669,31 @@ window.Widget = (function () {
                 columns[name] = {id: name, type: "number"};
             });
 
-            var range = [];
-            for (rangeLow; rangeLow < rangeHigh; rangeLow++) {
-                range.push(this.dataset.structure[rangeLow]);
-            }
-
             var newData  = [];
             var expandedColName = this.series_select.getValue();
 
+            // Create the new set of data to be used
             range.forEach(function (date, index) {
-                var row = {newGroupedColumn: date.id};
+                var row = {newGroupedColumn: date};
 
                 this.dataset.data.forEach(function (d) {
-                    row[d[expandedColName]] = d[date.id];
+                    row[d[expandedColName]] = d[date];
                 });
 
                 newData.push(row);
             }.bind(this));
 
-            config = this.GoogleChartConfig.configure(series, {
+            // Filter the series
+            var filteredSeries = [];
+            series.forEach(function (s) {
+                if (filters.y.every(function (f) {
+                    return f !== s;
+            })) {
+                    filteredSeries.push(s);
+                }
+            });
+
+            config = this.GoogleChartConfig.configure(filteredSeries, {
                 graph_type: this.current_graph_type,
                 dataset: {data: newData},
                 column_info: columns,
@@ -585,6 +704,7 @@ window.Widget = (function () {
                     series_field: this.series_field_select.getValue(),
                     group_column: "newGroupedColumn",
                 },
+                filter: filters.x,
                 options: {
                     title: this.dataset.metadata.name
                 },
@@ -596,14 +716,17 @@ window.Widget = (function () {
 
     var create_highcharts_config = function create_highcharts_config(series) {
         var config;
+        var filters = applyFilters.call(this, series);
 
         if (!this.fromColumnLabels) {
+
             // Default behaviour
             config = this.HighChartConfig.configure(series, {
                 graph_type: this.current_graph_type,
                 group_axis_select: this.group_axis_select.getValue(),
                 dataset: this.dataset,
                 column_info: this.column_info,
+                filter: filters.x,
                 options: {
                     title: this.dataset.metadata.name
                 },
@@ -613,10 +736,9 @@ window.Widget = (function () {
             var columnNames = Object.keys(this.column_info);
             var rangeLow = columnNames.indexOf(this.group_axis_select.getValue());
             var rangeHigh = columnNames.indexOf(this.range_select.getValue());
-
-            // If the range is not right, probably the user is not done configuring the graph.
-            if (rangeLow >= rangeHigh) {
-                return;
+            var range = [];
+            for (rangeLow; rangeLow < rangeHigh; rangeLow++) {
+                range.push(this.dataset.structure[rangeLow].id);
             }
 
             var columns = {
@@ -626,25 +748,31 @@ window.Widget = (function () {
                 columns[name] = {id: name, type: "number"};
             });
 
-            var range = [];
-            for (rangeLow; rangeLow < rangeHigh; rangeLow++) {
-                range.push(this.dataset.structure[rangeLow]);
-            }
-
             var newData  = [];
             var expandedColName = this.series_select.getValue();
 
+            // Create the new set of data to be used
             range.forEach(function (date, index) {
-                var row = {newGroupedColumn: date.id};
+                var row = {newGroupedColumn: date};
 
                 this.dataset.data.forEach(function (d) {
-                    row[d[expandedColName]] = d[date.id];
+                    row[d[expandedColName]] = d[date];
                 });
 
                 newData.push(row);
             }.bind(this));
 
-            config = this.HighChartConfig.configure(series, {
+            // Filter the series
+            var filteredSeries = [];
+            series.forEach(function (s) {
+                if (filters.y.every(function (f) {
+                    return f !== s;
+            })) {
+                    filteredSeries.push(s);
+                }
+            });
+
+            config = this.HighChartConfig.configure(filteredSeries, {
                 graph_type: this.current_graph_type,
                 dataset: {data: newData},
                 column_info: columns,
@@ -652,8 +780,8 @@ window.Widget = (function () {
                 options: {
                     title: this.dataset.metadata.name
                 },
+                filter: filters.x,
             });
-
         }
 
         MashupPlatform.wiring.pushEvent('highcharts-graph-config', JSON.stringify(config));
@@ -710,20 +838,10 @@ window.Widget = (function () {
             if (this.column_info[fields[i]].type !== 'number') {
                 continue;
             }
-            var label = document.createElement('label');
-
-            var checkbox = document.createElement('input');
-            checkbox.setAttribute('type', 'checkbox');
-            checkbox.setAttribute('name', 'series');
-            checkbox.setAttribute('value', fields[i]);
-
-            label.appendChild(checkbox);
-            label.appendChild(document.createTextNode(fields[i]));
+            var label = buildCheckbox.call(this, "series", fields[i]);
 
             this.series_div.appendChild(label);
             this.series_div.appendChild(document.createElement('br'));
-
-            checkbox.addEventListener('change', create_graph_config.bind(this));
         }
     };
 
