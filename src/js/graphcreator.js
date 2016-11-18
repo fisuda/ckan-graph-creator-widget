@@ -517,6 +517,89 @@ window.Widget = (function () {
         }
     };
 
+    var create_generic_config = function create_generic_config (series, configurer) {
+        var config;
+        var filters = applyFilters();
+        var customSeries = series;
+        var columns;
+        var groupColumn;
+        var dataset;
+
+        if (!this.fromColumnLabels) {
+            customSeries = series;
+            groupColumn = this.group_axis_select.getValue();
+            dataset = this.dataset;
+            columns = this.column_info;
+        } else {
+
+            var columnNames = Object.keys(this.column_info);
+            var rangeLow = columnNames.indexOf(this.group_axis_select.getValue());
+            var rangeHigh = columnNames.indexOf(this.range_select.getValue());
+            var range = [];
+            for (rangeLow; rangeLow < rangeHigh; rangeLow++) {
+                range.push(this.dataset.structure[rangeLow].id);
+            }
+
+            var structure = [];
+            structure.push({id: "newGroupedColumn", type: "string"});
+
+            columns = {
+                newGroupedColumn: {id: "newGroupedColumn", type: "string"}
+            };
+            series.forEach(function (name) {
+                columns[name] = {id: name, type: "number"};
+                structure.push({id: name, type: "number"});
+            });
+
+            var newData  = [];
+            var expandedColName = this.series_select.getValue();
+
+            // Create the new set of data to be used
+            range.forEach(function (date, index) {
+                var row = {newGroupedColumn: date};
+
+                this.dataset.data.forEach(function (d) {
+                    row[d[expandedColName]] = d[date];
+                });
+
+                newData.push(row);
+            }.bind(this));
+
+            var filteredSeries = [];
+            series.forEach(function (s) {
+                if (filters.y.every(function (f) {
+                    return f !== s;
+            })) {
+                    filteredSeries.push(s);
+                }
+            });
+
+            customSeries = filteredSeries;
+            groupColumn = "newGroupedColumn";
+            dataset = {data: newData, structure: structure};
+        }
+
+        config = configurer(customSeries, {
+            graph_type: this.current_graph_type,
+            dataset: dataset,
+            column_info: columns,
+            fields: {
+                axisx: this.axisx_select.getValue(),
+                axisy: this.axisy_select.getValue(),
+                axisz: this.axisz_select.getValue(),
+                series_field: this.series_field_select.getValue(),
+                id_bubble: this.id_bubble_select.getValue(),
+                group_column: groupColumn,
+            },
+            filter: filters.x,
+            options: {
+                title: this.dataset.metadata.name
+            },
+        });
+
+        return config;
+    };
+
     var disable_all = function disable_all() {
         var nodes = document.querySelectorAll(".graph-button");
         Array.prototype.slice.call(nodes).forEach(function (button) {
@@ -547,247 +630,21 @@ window.Widget = (function () {
 
     var create_flotr2_config = function create_flotr2_config(series) {
         var config;
-        var filters = applyFilters();
-
-        if (!this.fromColumnLabels) {
-            // Default behaviour
-            config = this.Flotr2Config.configure(series, {
-                graph_type: this.current_graph_type,
-                dataset: this.dataset,
-                column_info: this.column_info,
-                fields: {
-                    axisx: this.axisx_select.getValue(),
-                    axisy: this.axisy_select.getValue(),
-                    axisz: this.axisz_select.getValue(),
-                    series_field: this.series_field_select.getValue(),
-                    group_column: this.group_axis_select.getValue(),
-                },
-                filter: filters.x,
-                options: {
-                    title: this.dataset.metadata.name
-                },
-            });
-        } else {
-            // Build chart using column labels
-            var columnNames = Object.keys(this.column_info);
-            var rangeLow = columnNames.indexOf(this.group_axis_select.getValue());
-            var rangeHigh = columnNames.indexOf(this.range_select.getValue());
-            var range = [];
-            for (rangeLow; rangeLow < rangeHigh; rangeLow++) {
-                range.push(this.dataset.structure[rangeLow].id);
-            }
-
-            var structure = [];
-            structure.push({id: "newGroupedColumn", type: "string"});
-
-            var columns = {
-                newGroupedColumn: {id: "newGroupedColumn", type: "string"}
-            };
-            series.forEach(function (name) {
-                columns[name] = {id: name, type: "number"};
-                structure.push({id: name, type: "number"});
-            });
-
-            var newData  = [];
-            var expandedColName = this.series_select.getValue();
-
-            // Create the new set of data to be used
-            range.forEach(function (date, index) {
-                var row = {newGroupedColumn: date};
-
-                this.dataset.data.forEach(function (d) {
-                    row[d[expandedColName]] = d[date];
-                });
-
-                newData.push(row);
-            }.bind(this));
-
-            // Filter the series
-            var filteredSeries = [];
-            series.forEach(function (s) {
-                if (filters.y.every(function (f) {
-                    return f !== s;
-            })) {
-                    filteredSeries.push(s);
-                }
-            });
-
-            config = this.Flotr2Config.configure(filteredSeries, {
-                graph_type: this.current_graph_type,
-                dataset: {data: newData, structure: structure},
-                column_info: columns,
-                fields: {
-                    axisx: this.axisx_select.getValue(),
-                    axisy: this.axisy_select.getValue(),
-                    axisz: this.axisz_select.getValue(),
-                    series_field: this.series_field_select.getValue(),
-                    group_column: "newGroupedColumn",
-                },
-                filter: filters.x,
-                options: {
-                    title: this.dataset.metadata.name
-                },
-            });
-        }
+        config = create_generic_config.call(this, series, this.Flotr2Config.configure);
 
         MashupPlatform.wiring.pushEvent('flotr2-graph-config', JSON.stringify(config));
     };
 
     var create_google_charts_config = function create_google_charts_config(series) {
         var config;
-        var filters = applyFilters();
-
-        if (!this.fromColumnLabels) {
-            // Default behaviour
-
-            config = this.GoogleChartConfig.configure(series, {
-                graph_type: this.current_graph_type,
-                dataset: this.dataset,
-                column_info: this.column_info,
-                fields: {
-                    axisx: this.axisx_select.getValue(),
-                    axisy: this.axisy_select.getValue(),
-                    axisz: this.axisz_select.getValue(),
-                    series_field: this.series_field_select.getValue(),
-                    group_column: this.group_axis_select.getValue(),
-                    id_bubble: this.id_bubble_select.getValue(),
-                },
-                filter: filters.x,
-                options: {
-                    title: this.dataset.metadata.name
-                },
-            });
-        } else {
-            // Build chart using column labels
-            var columnNames = Object.keys(this.column_info);
-            var rangeLow = columnNames.indexOf(this.group_axis_select.getValue());
-            var rangeHigh = columnNames.indexOf(this.range_select.getValue());
-            var range = [];
-            for (rangeLow; rangeLow < rangeHigh; rangeLow++) {
-                range.push(this.dataset.structure[rangeLow].id);
-            }
-
-            var columns = {
-                newGroupedColumn: {id: "newGroupedColumn", type: "string"}
-            };
-            series.forEach(function (name) {
-                columns[name] = {id: name, type: "number"};
-            });
-
-            var newData  = [];
-            var expandedColName = this.series_select.getValue();
-
-            // Create the new set of data to be used
-            range.forEach(function (date, index) {
-                var row = {newGroupedColumn: date};
-
-                this.dataset.data.forEach(function (d) {
-                    row[d[expandedColName]] = d[date];
-                });
-
-                newData.push(row);
-            }.bind(this));
-
-            // Filter the series
-            var filteredSeries = [];
-            series.forEach(function (s) {
-                if (filters.y.every(function (f) {
-                    return f !== s;
-            })) {
-                    filteredSeries.push(s);
-                }
-            });
-
-            config = this.GoogleChartConfig.configure(filteredSeries, {
-                graph_type: this.current_graph_type,
-                dataset: {data: newData},
-                column_info: columns,
-                fields: {
-                    axisx: this.axisx_select.getValue(),
-                    axisy: this.axisy_select.getValue(),
-                    axisz: this.axisz_select.getValue(),
-                    series_field: this.series_field_select.getValue(),
-                    group_column: "newGroupedColumn",
-                },
-                filter: filters.x,
-                options: {
-                    title: this.dataset.metadata.name
-                },
-            });
-        }
+        config = create_generic_config.call(this, series, this.GoogleChartConfig.configure);
 
         MashupPlatform.wiring.pushEvent('googlecharts-graph-config', JSON.stringify(config));
     };
 
     var create_highcharts_config = function create_highcharts_config(series) {
         var config;
-        var filters = applyFilters.call(this, series);
-
-        if (!this.fromColumnLabels) {
-
-            // Default behaviour
-            config = this.HighChartConfig.configure(series, {
-                graph_type: this.current_graph_type,
-                group_axis_select: this.group_axis_select.getValue(),
-                dataset: this.dataset,
-                column_info: this.column_info,
-                filter: filters.x,
-                options: {
-                    title: this.dataset.metadata.name
-                },
-            });
-        } else {
-            // Build chart using column labels
-            var columnNames = Object.keys(this.column_info);
-            var rangeLow = columnNames.indexOf(this.group_axis_select.getValue());
-            var rangeHigh = columnNames.indexOf(this.range_select.getValue());
-            var range = [];
-            for (rangeLow; rangeLow < rangeHigh; rangeLow++) {
-                range.push(this.dataset.structure[rangeLow].id);
-            }
-
-            var columns = {
-                newGroupedColumn: {id: "newGroupedColumn", type: "number"}
-            };
-            series.forEach(function (name) {
-                columns[name] = {id: name, type: "number"};
-            });
-
-            var newData  = [];
-            var expandedColName = this.series_select.getValue();
-
-            // Create the new set of data to be used
-            range.forEach(function (date, index) {
-                var row = {newGroupedColumn: date};
-
-                this.dataset.data.forEach(function (d) {
-                    row[d[expandedColName]] = d[date];
-                });
-
-                newData.push(row);
-            }.bind(this));
-
-            // Filter the series
-            var filteredSeries = [];
-            series.forEach(function (s) {
-                if (filters.y.every(function (f) {
-                    return f !== s;
-            })) {
-                    filteredSeries.push(s);
-                }
-            });
-
-            config = this.HighChartConfig.configure(filteredSeries, {
-                graph_type: this.current_graph_type,
-                dataset: {data: newData},
-                column_info: columns,
-                group_axis_select: "newGroupedColumn",
-                options: {
-                    title: this.dataset.metadata.name
-                },
-                filter: filters.x,
-            });
-        }
+        config = create_generic_config.call(this, series, this.HighChartConfig.configure);
 
         MashupPlatform.wiring.pushEvent('highcharts-graph-config', JSON.stringify(config));
     };

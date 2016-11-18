@@ -55,7 +55,7 @@
 
     HighChartConfigurer.prototype.configure = function configure(series, options) {
         var graph_type = options.graph_type;
-        var group_column = options.group_axis_select;
+        var group_column = options.fields.group_column;
         var column_info = options.column_info;
         var dataset = options.dataset;
         var filter = options.filter;
