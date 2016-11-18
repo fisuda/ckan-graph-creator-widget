@@ -206,7 +206,7 @@ window.Widget = (function () {
             var columnNames = Object.keys(this.column_info);
             var rangeLow = columnNames.indexOf(this.group_axis_select.getValue());
             var rangeHigh = columnNames.indexOf(this.range_select.getValue());
-            for (rangeLow; rangeLow < rangeHigh; rangeLow++) {
+            for (rangeLow; rangeLow <= rangeHigh; rangeLow++) {
                 var checkbox = buildCheckbox.call(this, "filtersX", this.dataset.structure[rangeLow].id);
                 divX.append(checkbox);
                 divX.appendChild(document.createElement('br'));
@@ -536,7 +536,7 @@ window.Widget = (function () {
             var rangeLow = columnNames.indexOf(this.group_axis_select.getValue());
             var rangeHigh = columnNames.indexOf(this.range_select.getValue());
             var range = [];
-            for (rangeLow; rangeLow < rangeHigh; rangeLow++) {
+            for (rangeLow; rangeLow <= rangeHigh; rangeLow++) {
                 range.push(this.dataset.structure[rangeLow].id);
             }
 
