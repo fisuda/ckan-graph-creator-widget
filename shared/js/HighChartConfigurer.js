@@ -299,10 +299,6 @@
         return config;
     };
 
-    // var configStackedBar = function configStackedBar(config, data, metadata) {
-
-    // };
-
     var config3dPieChart = function config3dPieChart(config, data) {
         config.chart.type = 'pie';
         config.chart.options3d = {
@@ -326,10 +322,16 @@
             pointFormat: '<b>{point.percentage:.1f}%</b>'
         };
 
+        var dataP = drillDownData(data);
+        var outdata = dataP.data, drills = dataP.drills;
+
         config.series = [{
-            type: 'pie',
-            data: flatData(data)
+            type: "pie",
+            data: outdata
         }];
+        config.drilldown = {
+            series: drills
+        };
 
         return config;
     };
