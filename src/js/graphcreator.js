@@ -505,19 +505,20 @@ window.Widget = (function () {
 
         if (series.length > 0) {
             this.workspace_tab.enable();
+            var options = create_generic_config.call(this, series);
             if (MashupPlatform.widget.outputs["flotr2-graph-config"].connected) {
-                create_flotr2_config.call(this, series);
+                create_flotr2_config.call(this, series, options);
             }
             if (MashupPlatform.widget.outputs['googlecharts-graph-config'].connected) {
-                create_google_charts_config.call(this, series);
+                create_google_charts_config.call(this, series, options);
             }
             if (MashupPlatform.widget.outputs['highcharts-graph-config'].connected) {
-                create_highcharts_config.call(this, series);
+                create_highcharts_config.call(this, series, options);
             }
         }
     };
 
-    var create_generic_config = function create_generic_config (series, configurer) {
+    var create_generic_config = function create_generic_config (series) {
         var config;
         var filters = applyFilters();
         var customSeries = series;
@@ -579,7 +580,7 @@ window.Widget = (function () {
             dataset = {data: newData, structure: structure};
         }
 
-        config = configurer(customSeries, {
+        return {
             graph_type: this.current_graph_type,
             dataset: dataset,
             column_info: columns,
@@ -595,9 +596,7 @@ window.Widget = (function () {
             options: {
                 title: this.dataset.metadata.name
             },
-        });
-
-        return config;
+        };
     };
 
     var disable_all = function disable_all() {
@@ -628,23 +627,23 @@ window.Widget = (function () {
         return {x: x, y: y};
     };
 
-    var create_flotr2_config = function create_flotr2_config(series) {
+    var create_flotr2_config = function create_flotr2_config(series, options) {
         var config;
-        config = create_generic_config.call(this, series, this.Flotr2Config.configure);
+        config = this.Flotr2Config.configure(series, options);
 
         MashupPlatform.wiring.pushEvent('flotr2-graph-config', JSON.stringify(config));
     };
 
-    var create_google_charts_config = function create_google_charts_config(series) {
+    var create_google_charts_config = function create_google_charts_config(series, options) {
         var config;
-        config = create_generic_config.call(this, series, this.GoogleChartConfig.configure);
+        config = this.GoogleChartConfig.configure(series, options);
 
         MashupPlatform.wiring.pushEvent('googlecharts-graph-config', JSON.stringify(config));
     };
 
-    var create_highcharts_config = function create_highcharts_config(series) {
+    var create_highcharts_config = function create_highcharts_config(series, options) {
         var config;
-        config = create_generic_config.call(this, series, this.HighChartConfig.configure);
+        config = this.HighChartConfig.configure(series, options);
 
         MashupPlatform.wiring.pushEvent('highcharts-graph-config', JSON.stringify(config));
     };
