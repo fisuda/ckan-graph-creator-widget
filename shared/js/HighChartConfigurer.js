@@ -45,6 +45,16 @@
         }
     };
 
+    HighChartConfigurer.prototype.hasSelector = function hasSelector(selector) {
+        var i;
+        for (i = 0; i < this.selectors.length; i++) {
+            if (selector === this.selectors[i]) {
+                return true;
+            }
+        }
+        return false;
+    };
+
     var parseData = function parseData(column_info, column, value) {
         if (column_info[column].type === 'number') {
             return Number(value);
@@ -59,7 +69,14 @@
         var column_info = options.column_info;
         var dataset = options.dataset;
         var filter = options.filter;
-        var config = {
+        var config;
+        if (!this.hasSelector("." + graph_type)) {
+            config = {};
+            config.alertmessage = "Graph not available for this widget";
+            return config;
+        }
+
+        config = {
             chart: {
                 plotBackgroundColor: null,
                 plotBorderWidth: null,
