@@ -602,7 +602,7 @@ window.Widget = (function () {
             },
             filter: filters.x,
             options: {
-                title: this.dataset.metadata.name
+                title: this.dataset.metadata ? this.dataset.metadata.name || "" : "",
             },
         };
     };
