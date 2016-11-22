@@ -102,6 +102,15 @@ window.Flotr2Configurer = (function () {
                     var serie = row[series_field];
                     data[series.indexOf(serie)].push([Number(row[axisx_field]), Number(row[axisy_field]) , Number(row[axisz_field])]);
                 }
+            } else if (graph_type === 'piechart') {
+                series.forEach(function(serie, i) {
+                    data[i].push([0,0]);
+                });
+                options.dataset.data.forEach(function(row) {
+                    series.forEach(function(serie, i) {
+                        data[i][0][1] += Number(row[serie]);
+                    });
+                });
             } else {
                 for (i = 0; i < series.length; i++) {
                     for (j = 0; j < options.dataset.data.length; j++) {
