@@ -589,6 +589,11 @@ window.Widget = (function () {
             dataset = {data: newData, structure: structure};
         }
 
+        var title = this.dataset.metadata ? this.dataset.metadata.name || "" : "";
+        if (this.titleInput.getValue()) {
+            title = this.titleInput.getValue();
+        }
+
         return {
             series: customSeries,
             options: {
@@ -605,7 +610,7 @@ window.Widget = (function () {
                 },
                 filter: filters.x,
                 options: {
-                    title: this.dataset.metadata ? this.dataset.metadata.name || "" : "",
+                    title: title,
                 },
             }
         };
