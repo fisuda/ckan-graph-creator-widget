@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-/* globals $, MockMP */
+/* globals Flotr2Configurer, GoogleChartConfigurer, HighChartConfigurer, MockMP, Widget */
 
 
 (function () {
@@ -23,18 +23,6 @@
 
     var clearDocument = function clearDocument() {
         document.body.innerHTML = "";
-    };
-
-    var getWiringCallback = function getWiringCallback(endpoint) {
-        var calls = MashupPlatform.wiring.registerCallback.calls;
-        var count = calls.count();
-        for (var i = count - 1; i >= 0; i--) {
-            var args = calls.argsFor(i);
-            if (args[0] === endpoint) {
-                return args[1];
-            }
-        }
-        return null;
     };
 
     window.MashupPlatform = new MockMP.MockMP();
@@ -57,7 +45,7 @@
                     connected: true
                 }
             };
-            window.MashupPlatform.wiring.registerStatusCallback = function() {};
+            window.MashupPlatform.wiring.registerStatusCallback = function () {};
             widget = new Widget();
             widget.init();
             spyOn(widget.layout, 'repaint').and.callThrough();
@@ -92,9 +80,9 @@
             expect(widget.layout.repaint).toHaveBeenCalled();
         });
 
-        describe("graphConfigurer", function() {
+        describe("graphConfigurer", function () {
             var config;
-            beforeEach(function() {
+            beforeEach(function () {
                 var dataset = {
                     structure: [
                         {type: "string", id: "id"},
@@ -111,7 +99,7 @@
                 config = {
                     graph_type: "linechart",
                     dataset: dataset,
-                    column_info: {id: {type:"string", id: "id"}, yValue: {type:"number", id:"yValue"}, yValue2: {type:"number", id:"yValue2"}},
+                    column_info: {id: {type: "string", id: "id"}, yValue: {type: "number", id: "yValue"}, yValue2: {type: "number", id: "yValue2"}},
                     fields: {
                         group_column: "id",
                     },
@@ -122,59 +110,59 @@
                 };
             });
 
-            describe("HighChartConfigurer", function() {
+            describe("HighChartConfigurer", function () {
                 var HighChartConfig;
-                beforeAll(function() {
+                beforeAll(function () {
                     HighChartConfig = new HighChartConfigurer();
                 });
 
-                it("basic linechart", function() {
+                it("basic linechart", function () {
                     var series = ["yValue"];
                     config.graph_type = "linechart";
 
                     var result = HighChartConfig.configure(series, config);
-                    
+
                     expect(result.chart.type).toEqual("line");
-                    expect(result.series).toEqual([{name:"yValue", data: [["1",1], ["2",2], ["3",2],["4",1]]}]);
+                    expect(result.series).toEqual([{name: "yValue", data: [["1", 1], ["2", 2], ["3", 2], ["4", 1]]}]);
                 });
 
-                it("multiple linechart", function() {
+                it("multiple linechart", function () {
                     var series = ["yValue", "yValue2"];
                     config.graph_type = "linechart";
 
                     var result = HighChartConfig.configure(series, config);
-                    
+
                     expect(result.chart.type).toEqual("line");
                     expect(result.series).toEqual([
-                        {name:"yValue", data: [["1",1], ["2",2], ["3",2],["4",1]]},
-                        {name:"yValue2", data: [["1",2], ["2",1], ["3",1],["4",2]]}
+                        {name: "yValue", data: [["1", 1], ["2", 2], ["3", 2], ["4", 1]]},
+                        {name: "yValue2", data: [["1", 2], ["2", 1], ["3", 1], ["4", 2]]}
                     ]);
                 });
 
-                it("basic barchart", function() {
+                it("basic barchart", function () {
                     var series = ["yValue"];
                     config.graph_type = "barchart";
 
                     var result = HighChartConfig.configure(series, config);
-                    
+
                     expect(result.chart.type).toEqual("bar");
-                    expect(result.series).toEqual([{name:"yValue", data: [["1",1], ["2",2], ["3",2],["4",1]]}]);
+                    expect(result.series).toEqual([{name: "yValue", data: [["1", 1], ["2", 2], ["3", 2], ["4", 1]]}]);
                 });
 
-                it("multiple barchart", function() {
+                it("multiple barchart", function () {
                     var series = ["yValue", "yValue2"];
                     config.graph_type = "barchart";
 
                     var result = HighChartConfig.configure(series, config);
-                    
+
                     expect(result.chart.type).toEqual("bar");
                     expect(result.series).toEqual([
-                        {name:"yValue", data: [["1",1], ["2",2], ["3",2],["4",1]]},
-                        {name:"yValue2", data: [["1",2], ["2",1], ["3",1],["4",2]]}
+                        {name: "yValue", data: [["1", 1], ["2", 2], ["3", 2], ["4", 1]]},
+                        {name: "yValue2", data: [["1", 2], ["2", 1], ["3", 1], ["4", 2]]}
                     ]);
                 });
 
-                it("piechart", function() {
+                it("piechart", function () {
                     var series = ["yValue", "yValue2"];
                     config.graph_type = "piechart";
 
@@ -187,7 +175,7 @@
                     ]);
                 });
 
-                it("should filter data", function() {
+                it("should filter data", function () {
                     var series = ["yValue", "yValue2"];
                     config.graph_type = "linechart";
                     config.filter = ["2"];
@@ -196,137 +184,137 @@
 
                     expect(result.chart.type).toEqual("line");
                     expect(result.series).toEqual([
-                        {name:"yValue", data: [["1",1], ["3",2],["4",1]]},
-                        {name:"yValue2", data: [["1",2], ["3",1],["4",2]]}
+                        {name: "yValue", data: [["1", 1], ["3", 2], ["4", 1]]},
+                        {name: "yValue2", data: [["1", 2], ["3", 1], ["4", 2]]}
                     ]);
                 });
             });
 
-            describe("GoogleChartConfigurer", function() {
+            describe("GoogleChartConfigurer", function () {
                 var GoogleChartConfig;
-                beforeAll(function() {
+                beforeAll(function () {
                     GoogleChartConfig = new GoogleChartConfigurer();
                 });
 
-                it("basic linechart", function() {
+                it("basic linechart", function () {
                     var series = ["yValue"];
                     config.graph_type = "linechart";
 
                     var result = GoogleChartConfig.configure(series, config);
-                    
+
                     expect(result.type).toEqual("LineChart");
-                    expect(result.data).toEqual([["id", "yValue"], ["1",1], ["2",2], ["3",2],["4",1]]);
+                    expect(result.data).toEqual([["id", "yValue"], ["1", 1], ["2", 2], ["3", 2], ["4", 1]]);
                 });
 
-                it("multiple linechart", function() {
+                it("multiple linechart", function () {
                     var series = ["yValue", "yValue2"];
                     config.graph_type = "linechart";
 
                     var result = GoogleChartConfig.configure(series, config);
-                    
+
                     expect(result.type).toEqual("LineChart");
-                    expect(result.data).toEqual([["id", "yValue", "yValue2"], ["1",1, 2], ["2", 2, 1], ["3", 2, 1],["4", 1, 2]]);
+                    expect(result.data).toEqual([["id", "yValue", "yValue2"], ["1", 1, 2], ["2", 2, 1], ["3", 2, 1], ["4", 1, 2]]);
                 });
 
-                it("basic barchart", function() {
+                it("basic barchart", function () {
                     var series = ["yValue"];
                     config.graph_type = "barchart";
 
                     var result = GoogleChartConfig.configure(series, config);
-                    
+
                     expect(result.type).toEqual("BarChart");
-                    expect(result.data).toEqual([["id", "yValue"], ["1",1], ["2",2], ["3",2],["4",1]]);
+                    expect(result.data).toEqual([["id", "yValue"], ["1", 1], ["2", 2], ["3", 2], ["4", 1]]);
                 });
 
-                it("multiple barchart", function() {
+                it("multiple barchart", function () {
                     var series = ["yValue", "yValue2"];
                     config.graph_type = "barchart";
 
                     var result = GoogleChartConfig.configure(series, config);
-                    
+
                     expect(result.type).toEqual("BarChart");
-                    expect(result.data).toEqual([["id", "yValue", "yValue2"], ["1",1, 2], ["2", 2, 1], ["3", 2, 1],["4", 1, 2]]);
+                    expect(result.data).toEqual([["id", "yValue", "yValue2"], ["1", 1, 2], ["2", 2, 1], ["3", 2, 1], ["4", 1, 2]]);
                 });
 
-                it("piechart", function() {
+                it("piechart", function () {
                     var series = ["yValue", "yValue2"];
                     config.graph_type = "piechart";
 
                     var result = GoogleChartConfig.configure(series, config);
 
                     expect(result.type).toEqual("PieChart");
-                    expect(result.data).toEqual([["item", "value"], ["yValue",6], ["yValue2", 6]]);
+                    expect(result.data).toEqual([["item", "value"], ["yValue", 6], ["yValue2", 6]]);
                 });
 
-                it("should filter data", function() {
+                it("should filter data", function () {
                     var series = ["yValue", "yValue2"];
                     config.graph_type = "linechart";
                     config.filter = ["2"];
 
                     var result = GoogleChartConfig.configure(series, config);
-                    
+
                     expect(result.type).toEqual("LineChart");
-                    expect(result.data).toEqual([["id", "yValue", "yValue2"], ["1",1, 2], ["3", 2, 1],["4", 1, 2]]);
+                    expect(result.data).toEqual([["id", "yValue", "yValue2"], ["1", 1, 2], ["3", 2, 1], ["4", 1, 2]]);
                 });
             });
 
-            describe("Flotr2ChartConfigurer", function() {
+            describe("Flotr2Configurer", function () {
                 var Flotr2Config;
-                beforeAll(function() {
+                beforeAll(function () {
                     Flotr2Config = new Flotr2Configurer();
                 });
 
-                it("basic linechart", function() {
+                it("basic linechart", function () {
                     var series = ["yValue"];
                     config.graph_type = "linechart";
 
                     var result = Flotr2Config.configure(series, config);
-                    
+
                     expect(result.config.lines.show).toBeTruthy();
                     expect(result.datasets).toEqual({0: {label: "yValue"}});
-                    expect(result.data).toEqual({0: [[0,1], [1,2], [2,2],[3,1]]});
+                    expect(result.data).toEqual({0: [[0, 1], [1, 2], [2, 2], [3, 1]]});
                 });
 
-                it("multiple linechart", function() {
+                it("multiple linechart", function () {
                     var series = ["yValue", "yValue2"];
                     config.graph_type = "linechart";
 
                     var result = Flotr2Config.configure(series, config);
-                    
+
                     expect(result.config.lines.show).toBeTruthy();
                     expect(result.datasets).toEqual({0: {label: "yValue"}, 1: {label: "yValue2"}});
                     expect(result.data).toEqual({
-                        0: [[0,1], [1,2], [2,2],[3,1]],
-                        1: [[0,2], [1,1], [2,1], [3,2]]
+                        0: [[0, 1], [1, 2], [2, 2], [3, 1]],
+                        1: [[0, 2], [1, 1], [2, 1], [3, 2]]
                     });
                 });
 
-                it("basic barchart", function() {
+                it("basic barchart", function () {
                     var series = ["yValue"];
                     config.graph_type = "barchart";
 
                     var result = Flotr2Config.configure(series, config);
-                    
+
                     expect(result.config.bars.show).toBeTruthy();
                     expect(result.datasets).toEqual({0: {label: "yValue"}});
-                    expect(result.data).toEqual({0: [[0,1], [1,2], [2,2],[3,1]]});
+                    expect(result.data).toEqual({0: [[0, 1], [1, 2], [2, 2], [3, 1]]});
                 });
 
-                it("multiple barchart", function() {
+                it("multiple barchart", function () {
                     var series = ["yValue", "yValue2"];
                     config.graph_type = "barchart";
 
                     var result = Flotr2Config.configure(series, config);
-                    
+
                     expect(result.config.bars.show).toBeTruthy();
                     expect(result.datasets).toEqual({0: {label: "yValue"}, 1: {label: "yValue2"}});
                     expect(result.data).toEqual({
-                        0: [[0,1], [1,2], [2,2],[3,1]],
-                        1: [[0,2], [1,1], [2,1], [3,2]]
+                        0: [[0, 1], [1, 2], [2, 2], [3, 1]],
+                        1: [[0, 2], [1, 1], [2, 1], [3, 2]]
                     });
                 });
 
-                it("piechart", function() {
+                it("piechart", function () {
                     var series = ["yValue", "yValue2"];
                     config.graph_type = "piechart";
 
@@ -340,18 +328,18 @@
                     });
                 });
 
-                it("should filter data", function() {
+                it("should filter data", function () {
                     var series = ["yValue", "yValue2"];
                     config.graph_type = "linechart";
                     config.filter = ["2"];
 
                     var result = Flotr2Config.configure(series, config);
-                    
+
                     expect(result.config.lines.show).toBeTruthy();
                     expect(result.datasets).toEqual({0: {label: "yValue"}, 1: {label: "yValue2"}});
                     expect(result.data).toEqual({
-                        0: [[0,1], [2,2], [3,1]],
-                        1: [[0,2], [2,1], [3,2]]
+                        0: [[0, 1], [2, 2], [3, 1]],
+                        1: [[0, 2], [2, 1], [3, 2]]
                     });
                 });
             });

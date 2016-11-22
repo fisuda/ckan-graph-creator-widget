@@ -1,5 +1,5 @@
 {
-  "extend": ".eslintrc-rules",
+  "extends": ".eslintrc-rules",
   "env": {
     "browser": true,
     "jasmine": true

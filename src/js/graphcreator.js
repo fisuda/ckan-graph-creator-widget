@@ -520,16 +520,13 @@ window.Widget = (function () {
         }
     };
 
-    var create_generic_config = function create_generic_config (series) {
-        var config;
+    var create_generic_config = function create_generic_config(series) {
         var filters = applyFilters();
-        var customSeries = series;
         var columns;
         var groupColumn;
         var dataset;
 
         if (!this.fromColumnLabels) {
-            customSeries = series;
             groupColumn = this.group_axis_select.getValue();
             dataset = this.dataset;
             columns = this.column_info;
@@ -576,14 +573,15 @@ window.Widget = (function () {
 
             var filteredSeries = [];
             series.forEach(function (s) {
-                if (filters.y.every(function (f) {
+                var passFilter = filters.y.every(function (f) {
                     return f !== s;
-            })) {
+                });
+
+                if (passFilter) {
                     filteredSeries.push(s);
                 }
             });
 
-            customSeries = filteredSeries;
             groupColumn = "newGroupedColumn";
             dataset = {data: newData, structure: structure};
         }

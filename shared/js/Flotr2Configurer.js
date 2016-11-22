@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 CoNWeT Lab., Universidad Politécnica de Madrid
+ * Copyright (c) 2014-2016 CoNWeT Lab., Universidad Politécnica de Madrid
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,13 +59,13 @@ window.Flotr2Configurer = (function () {
             var graph_type = options.graph_type;
             var fields = options.fields;
             var group_column = fields.group_column;
-            var data = {};        //Contains all the series that wil be shown in the graph
-            var ticks = [];       //When string are used as group column, we need to format the values
-            var series_meta = {}; //Contails the name of the datasets
+            var data = {};        // Contains all the series that wil be shown in the graph
+            var ticks = [];       // When string are used as group column, we need to format the values
+            var series_meta = {}; // Contails the name of the datasets
             var group_column_axis = (graph_type == 'bargraph') ? 'yaxis' : 'xaxis';
             var filter = options.filter;
 
-            //Group Column type
+            // Group Column type
             var group_column_type = null;
             for (i = 0; i < options.dataset.structure.length && group_column_type == null; i++) {
                 var field = options.dataset.structure[i];
@@ -74,7 +74,7 @@ window.Flotr2Configurer = (function () {
                 }
             }
 
-            //Is the Group Column an interger or a float?
+            // Is the Group Column an interger or a float?
             var group_column_float = false;
             for (i = 0; i < options.dataset.data.length && !group_column_float; i++) {
                 row = options.dataset.data[i];
@@ -83,7 +83,7 @@ window.Flotr2Configurer = (function () {
                 }
             }
 
-            //Create the series
+            // Create the series
             for (i = 0; i < series.length; i++) {
                 data[i] = [];
                 series_meta[i] = {
@@ -100,14 +100,14 @@ window.Flotr2Configurer = (function () {
                 for (j = 0; j < options.dataset.data.length; j++) {
                     row = options.dataset.data[j];
                     var serie = row[series_field];
-                    data[series.indexOf(serie)].push([Number(row[axisx_field]), Number(row[axisy_field]) , Number(row[axisz_field])]);
+                    data[series.indexOf(serie)].push([Number(row[axisx_field]), Number(row[axisy_field]), Number(row[axisz_field])]);
                 }
             } else if (graph_type === 'piechart') {
-                series.forEach(function(serie, i) {
-                    data[i].push([0,0]);
+                series.forEach(function (serie, i) {
+                    data[i].push([0, 0]);
                 });
-                options.dataset.data.forEach(function(row) {
-                    series.forEach(function(serie, i) {
+                options.dataset.data.forEach(function (row) {
+                    series.forEach(function (serie, i) {
                         data[i][0][1] += Number(row[serie]);
                     });
                 });
@@ -120,14 +120,14 @@ window.Flotr2Configurer = (function () {
                         if (filter.every(function (f) {
                             return f !== group_column_value;
                         })) {
-                            //Numbers codified as strings must be transformed in real JS numbers
-                            //Just in case the previous widget/operator hasn't done it.
+                            // Numbers codified as strings must be transformed in real JS numbers
+                            // Just in case the previous widget/operator hasn't done it.
                             switch (group_column_type) {
                             case 'number':
                                 group_column_value = Number(group_column_value);
                                 break;
                             default:
-                                //Ticks should be only introduced once
+                                // Ticks should be only introduced once
                                 if (i === 0) {
                                     ticks.push([j, group_column_value]);
                                 }
@@ -135,9 +135,9 @@ window.Flotr2Configurer = (function () {
                                 break;
                             }
 
-                            //In the bars graph the data should be encoded the other way around
-                            //Transformation into numbers is automatic since a graph should be
-                            //build with numbers
+                            // In the bars graph the data should be encoded the other way around
+                            // Transformation into numbers is automatic since a graph should be
+                            // build with numbers
                             if (graph_type === 'bargraph') {
                                 data[i].push([Number(row[series[i]]), group_column_value]);
                             } else {
@@ -148,7 +148,7 @@ window.Flotr2Configurer = (function () {
                 }
             }
 
-            //FlotR2 configuration
+            // FlotR2 configuration
             var htmltext = false;
             var flotr2Config = {
                 config: {
@@ -162,14 +162,14 @@ window.Flotr2Configurer = (function () {
                 data: data
             };
 
-            //Configure the group column (X except for when selected graph is a Bar chart)
+            // Configure the group column (X except for when selected graph is a Bar chart)
             flotr2Config.config[group_column_axis] = {
                 labelsAngle: 45,
                 ticks: ticks.length !== 0 ? ticks : null,
                 noTicks: data[0].length,
-                title:  options.options.title,
+                title: options.options.title,
                 showLabels: true,
-                //If the group_column data contains at least one float: 2 decimals. Otherwise: 0
+                // If the group_column data contains at least one float: 2 decimals. Otherwise: 0
                 tickDecimals: group_column_float ? 2 : 0
             };
 
