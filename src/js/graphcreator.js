@@ -506,14 +506,16 @@ window.Widget = (function () {
         if (series.length > 0) {
             this.workspace_tab.enable();
             var options = create_generic_config.call(this, series);
-            if (MashupPlatform.widget.outputs["flotr2-graph-config"].connected) {
-                create_flotr2_config.call(this, series, options);
-            }
-            if (MashupPlatform.widget.outputs['googlecharts-graph-config'].connected) {
-                create_google_charts_config.call(this, series, options);
-            }
-            if (MashupPlatform.widget.outputs['highcharts-graph-config'].connected) {
-                create_highcharts_config.call(this, series, options);
+            if (options) {
+                if (MashupPlatform.widget.outputs["flotr2-graph-config"].connected) {
+                    create_flotr2_config.call(this, series, options);
+                }
+                if (MashupPlatform.widget.outputs['googlecharts-graph-config'].connected) {
+                    create_google_charts_config.call(this, series, options);
+                }
+                if (MashupPlatform.widget.outputs['highcharts-graph-config'].connected) {
+                    create_highcharts_config.call(this, series, options);
+                }
             }
         }
     };
@@ -536,6 +538,12 @@ window.Widget = (function () {
             var columnNames = Object.keys(this.column_info);
             var rangeLow = columnNames.indexOf(this.group_axis_select.getValue());
             var rangeHigh = columnNames.indexOf(this.range_select.getValue());
+
+            // User is probably not done configuring the graph
+            if (rangeLow > rangeHigh) {
+                return;
+            }
+
             var range = [];
             for (rangeLow; rangeLow <= rangeHigh; rangeLow++) {
                 range.push(this.dataset.structure[rangeLow].id);
