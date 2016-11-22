@@ -97,6 +97,18 @@ window.GoogleChartConfigurer = (function () {
                     var serie = row[series_field];
                     data.push([row[id_bubble], Number(row[axisx_field]), Number(row[axisy_field]), serie, Number(row[axisz_field])]);
                 }
+            } else if (['piechart', 'piechart-3d', 'donutchart'].indexOf(graph_type) !== -1) {
+                data.push(["item", "value"]);
+
+                series.forEach(function(serie, i) {
+                    data[i + 1] = ([serie,0]);
+                });
+                options.dataset.data.forEach(function(row) {
+                    series.forEach(function(serie, i) {
+                        data[i + 1][1] += Number(row[serie]);
+                    });
+                });
+
             } else {
                 data.push([group_column].concat(series));
                 for (i = 0; i < options.dataset.data.length; i++) {
