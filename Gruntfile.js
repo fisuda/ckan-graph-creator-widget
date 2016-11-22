@@ -52,13 +52,13 @@ module.exports = function (grunt) {
                 src: 'Gruntfile.js',
             },
             shared: {
-                src: 'src/js/**/*.js'
+                src: 'shared/js/**/*.js'
             },
             test: {
                 options: {
                     configFile: '.eslintrc-jasmine'
                 },
-                src: ['src/test/js/*.js']
+                src: 'test/js/*.js'
             }
         },
 

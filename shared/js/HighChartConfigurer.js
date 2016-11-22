@@ -179,7 +179,7 @@
         var dataList = {};
         dataList.timestamps = [];
         data.forEach(function (row) {
-            row.data.forEach(function (d){
+            row.data.forEach(function (d) {
                 dataList.timestamps.push(d[0]); // Build timestamps list
                 d = d[1]; // Build data list
             });
@@ -187,27 +187,6 @@
 
         dataList.data = data;
 
-        return dataList;
-    };
-
-    var flatData = function flatData(data) {
-        var dataN = {};
-        var i, j;
-
-        for (i = 0; i < data.length; i++) {
-            var dataRow = data[i];
-            for (j = 0; j < dataRow.data.length; j++) {
-                var name = dataRow.data[j][0];
-                dataN[name] = (dataN[name] || 0) + dataRow.data[j][1];
-            }
-        }
-
-        var dataList = [];
-        for (var key in dataN) {
-            if (dataN.hasOwnProperty(key)) {
-                dataList.push([key, dataN[key]]);
-            }
-        }
         return dataList;
     };
 
@@ -242,7 +221,7 @@
         };
     };
 
-    var configTimelineChart = function configTimelineChart (config, data, series) {
+    var configTimelineChart = function configTimelineChart(config, data, series) {
         config.chart.type = 'line';
         var dataList = timelineData(data);
 
@@ -264,36 +243,6 @@
                 enabled: true,
                 format: '{point.y}'
             }
-        };
-
-        return config;
-    };
-
-    var configBarChart = function configBarChart(config, data) {
-        config.chart.type = 'column';
-        config.xAxis = {
-            type: 'category'
-        };
-        config.plotOptions.series = {
-            borderWidth: 0,
-            dataLabels: {
-                enabled: true,
-                format: '{point.y}'
-            }
-        };
-        config.legend = {
-            enabled: false
-        };
-
-        var dataP = drillDownData(data);
-        var outdata = dataP.data, drills = dataP.drills;
-
-        config.series = [{
-            colorByPoint: true,
-            data: outdata
-        }];
-        config.drilldown = {
-            series: drills
         };
 
         return config;

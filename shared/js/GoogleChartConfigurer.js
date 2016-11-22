@@ -79,7 +79,7 @@ window.GoogleChartConfigurer = (function () {
             var column_info = options.column_info;
             var group_column = fields.group_column;
             var filter = options.filter;
-            var data = [];        //Contains all the series that wil be shown in the graph
+            var data = [];        // Contains all the series that wil be shown in the graph
 
             // Format data
             if (graph_type === 'bubblechart') {
@@ -100,11 +100,11 @@ window.GoogleChartConfigurer = (function () {
             } else if (['piechart', 'piechart-3d', 'donutchart'].indexOf(graph_type) !== -1) {
                 data.push(["item", "value"]);
 
-                series.forEach(function(serie, i) {
-                    data[i + 1] = ([serie,0]);
+                series.forEach(function (serie, i) {
+                    data[i + 1] = ([serie, 0]);
                 });
-                options.dataset.data.forEach(function(row) {
-                    series.forEach(function(serie, i) {
+                options.dataset.data.forEach(function (row) {
+                    series.forEach(function (serie, i) {
                         data[i + 1][1] += Number(row[serie]);
                     });
                 });

@@ -1,13 +1,12 @@
 {
-  "env": {
-    "browser": true
-  },
-  "globals": {
-    "MashupPlatform": false,
-    "Promise": false,
-    "WeakMap": false
-  },
   "rules": {
+    "comma-spacing": [
+      "error",
+      {
+        "before": false,
+        "after": true
+      }
+    ],
     "indent": [
       2,
       4,
@@ -72,7 +71,7 @@
       }
     ],
     "array-bracket-spacing": [
-      2,
+      "error",
       "never",
       {
         "singleValue": false
