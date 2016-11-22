@@ -505,16 +505,16 @@ window.Widget = (function () {
 
         if (series.length > 0) {
             this.workspace_tab.enable();
-            var options = create_generic_config.call(this, series);
-            if (options) {
+            var config = create_generic_config.call(this, series);
+            if (config) {
                 if (MashupPlatform.widget.outputs["flotr2-graph-config"].connected) {
-                    create_flotr2_config.call(this, series, options);
+                    create_flotr2_config.call(this, config);
                 }
                 if (MashupPlatform.widget.outputs['googlecharts-graph-config'].connected) {
-                    create_google_charts_config.call(this, series, options);
+                    create_google_charts_config.call(this, config);
                 }
                 if (MashupPlatform.widget.outputs['highcharts-graph-config'].connected) {
-                    create_highcharts_config.call(this, series, options);
+                    create_highcharts_config.call(this, config);
                 }
             }
         }
@@ -525,6 +525,8 @@ window.Widget = (function () {
         var columns;
         var groupColumn;
         var dataset;
+
+        var customSeries = series;
 
         if (!this.fromColumnLabels) {
             groupColumn = this.group_axis_select.getValue();
@@ -581,27 +583,31 @@ window.Widget = (function () {
                     filteredSeries.push(s);
                 }
             });
+            customSeries = filteredSeries;
 
             groupColumn = "newGroupedColumn";
             dataset = {data: newData, structure: structure};
         }
 
         return {
-            graph_type: this.current_graph_type,
-            dataset: dataset,
-            column_info: columns,
-            fields: {
-                axisx: this.axisx_select.getValue(),
-                axisy: this.axisy_select.getValue(),
-                axisz: this.axisz_select.getValue(),
-                series_field: this.series_field_select.getValue(),
-                id_bubble: this.id_bubble_select.getValue(),
-                group_column: groupColumn,
-            },
-            filter: filters.x,
+            series: customSeries,
             options: {
-                title: this.dataset.metadata ? this.dataset.metadata.name || "" : "",
-            },
+                graph_type: this.current_graph_type,
+                dataset: dataset,
+                column_info: columns,
+                fields: {
+                    axisx: this.axisx_select.getValue(),
+                    axisy: this.axisy_select.getValue(),
+                    axisz: this.axisz_select.getValue(),
+                    series_field: this.series_field_select.getValue(),
+                    id_bubble: this.id_bubble_select.getValue(),
+                    group_column: groupColumn,
+                },
+                filter: filters.x,
+                options: {
+                    title: this.dataset.metadata ? this.dataset.metadata.name || "" : "",
+                },
+            }
         };
     };
 
@@ -633,23 +639,23 @@ window.Widget = (function () {
         return {x: x, y: y};
     };
 
-    var create_flotr2_config = function create_flotr2_config(series, options) {
+    var create_flotr2_config = function create_flotr2_config(options) {
         var config;
-        config = this.Flotr2Config.configure(series, options);
+        config = this.Flotr2Config.configure(options.series, options.options);
 
         MashupPlatform.wiring.pushEvent('flotr2-graph-config', JSON.stringify(config));
     };
 
-    var create_google_charts_config = function create_google_charts_config(series, options) {
+    var create_google_charts_config = function create_google_charts_config(options) {
         var config;
-        config = this.GoogleChartConfig.configure(series, options);
+        config = this.GoogleChartConfig.configure(options.series, options.options);
 
         MashupPlatform.wiring.pushEvent('googlecharts-graph-config', JSON.stringify(config));
     };
 
-    var create_highcharts_config = function create_highcharts_config(series, options) {
+    var create_highcharts_config = function create_highcharts_config(options) {
         var config;
-        config = this.HighChartConfig.configure(series, options);
+        config = this.HighChartConfig.configure(options.series, options.options);
 
         MashupPlatform.wiring.pushEvent('highcharts-graph-config', JSON.stringify(config));
     };
