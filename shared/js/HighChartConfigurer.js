@@ -24,6 +24,7 @@
             '.linechart-smooth',
             '.piegraph',
             '.piechart',
+            '.piechart-3d',
             '.donutchart',
             '.columngraph',
             '.columnchart',
