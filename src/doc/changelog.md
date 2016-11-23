@@ -1,3 +1,14 @@
+## vx.x.x
+
+- Added the ability to create graphs using column labels instead of column values, allowing the user to generate charts inverting rows and columns.
+- Added configuration tab.
+- Added filters to remove columns and rows form the charts.
+- Added title input field to set the title of the charts.
+- Fixed piecharts not working properly (The piecharts where all different while using the same configuration)
+- Normalized GraphConfigurer input parameters for all GraphConfigurers.
+- GraphConfigurers are now shared.
+- Added GraphConfigurer tests.
+
 ## v1.0.4
 
 - Initial support for creating highchart configurations
