@@ -175,6 +175,13 @@ window.Widget = (function () {
         container.appendChild(this.series_field_select);
     };
 
+    var toggleFilters = function toggleFilters(button, filterDiv) {
+        var status = button.filterStatus;
+        for (var i = 0; i < filterDiv.childNodes.length; i++) {
+            filterDiv.childNodes[i].children[0].checked = status;
+        }
+    };
+
     var buildFiltersDiv = function buildFiltersDiv() {
         // Clear the div
         this.filterDiv.innerHTML = "";
@@ -184,14 +191,46 @@ window.Widget = (function () {
             return;
         }
 
-
         var titleX = document.createElement("h3");
         titleX.innerHTML = "Filter Axis X";
+
         var divX = document.createElement("div");
+        this.toggleFiltersX = new StyledElements.Button({
+            text: "Select all X Axis filters",
+            class: "btn-primary",
+        });
+        this.toggleFiltersX.filterStatus = false;
+
+        this.toggleFiltersX.addEventListener("click", function () {
+            this.toggleFiltersX.filterStatus = !this.toggleFiltersX.filterStatus;
+            if (this.toggleFiltersX.filterStatus) {
+                this.toggleFiltersX.setLabel("Deselect all X Axis filters");
+            } else {
+                this.toggleFiltersX.setLabel("Select all X Axis filters");
+            }
+            toggleFilters(this.toggleFiltersX, divX);
+            create_graph_config.call(this);
+        }.bind(this));
 
         var titleY = document.createElement("h3");
         titleY.innerHTML = "Filter Axis Y";
         var divY = document.createElement("div");
+        this.toggleFiltersY = new StyledElements.Button({
+            text: "Select all Y Axis filters",
+            class: "btn-primary",
+        });
+        this.toggleFiltersY.filterStatus = false;
+
+        this.toggleFiltersY.addEventListener("click", function () {
+            this.toggleFiltersY.filterStatus = !this.toggleFiltersY.filterStatus;
+            if (this.toggleFiltersY.filterStatus) {
+                this.toggleFiltersY.setLabel("Deselect all Y Axis filters");
+            } else {
+                this.toggleFiltersY.setLabel("Select all Y Axis filters");
+            }
+            toggleFilters(this.toggleFiltersY, divY);
+            create_graph_config.call(this);
+        }.bind(this));
 
         var series = get_general_series.call(this);
 
@@ -202,7 +241,6 @@ window.Widget = (function () {
             this.dataset.data.forEach(function (row) {
                 var checkbox = buildCheckbox.call(this, "filtersX", row[XCol]);
                 divX.append(checkbox);
-                divX.appendChild(document.createElement('br'));
             }.bind(this));
         } else {
 
@@ -213,21 +251,25 @@ window.Widget = (function () {
             for (rangeLow; rangeLow <= rangeHigh; rangeLow++) {
                 var checkbox = buildCheckbox.call(this, "filtersX", this.dataset.structure[rangeLow].id);
                 divX.append(checkbox);
-                divX.appendChild(document.createElement('br'));
             }
 
             // Build Y filters
             series.forEach(function (value) {
                 var checkbox = buildCheckbox.call(this, "filtersY", value);
                 divY.append(checkbox);
-                divY.appendChild(document.createElement('br'));
             }.bind(this));
         }
 
-        this.filterDiv.appendChild(titleX);
-        this.filterDiv.appendChild(divX);
-        this.filterDiv.appendChild(titleY);
-        this.filterDiv.appendChild(divY);
+        if (divX.childNodes.length > 0) {
+            this.filterDiv.appendChild(titleX);
+            this.toggleFiltersX.appendTo(this.filterDiv);
+            this.filterDiv.appendChild(divX);
+        }
+        if (divY.childNodes.length > 0) {
+            this.filterDiv.appendChild(titleY);
+            this.toggleFiltersY.appendTo(this.filterDiv);
+            this.filterDiv.appendChild(divY);
+        }
 
         // Update the graph using no filters
         create_graph_config.call(this);
@@ -725,7 +767,6 @@ window.Widget = (function () {
             var label = buildCheckbox.call(this, "series", fields[i]);
 
             this.series_div.appendChild(label);
-            this.series_div.appendChild(document.createElement('br'));
         }
     };
 
