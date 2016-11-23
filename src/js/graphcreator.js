@@ -30,7 +30,8 @@ window.Widget = (function () {
         this.group_title = null;
         this.current_graph_type = null;
         this.group_axis_select = null;
-        this.range_select = null;
+        this.low_range_select = null;
+        this.high_range_select = null;
         this.series_div = null;
         this.dataset = null;     // Dataset to be used: {structure: {...}, data: {...}, metadata: {...}}
         this.column_info = null;
@@ -89,8 +90,8 @@ window.Widget = (function () {
                 this.from_column.clear();
 
                 this.from_labels.appendChild(group_title);
-                this.from_labels.appendChild(this.group_axis_select);
-                this.from_labels.appendChild(this.range_select);
+                this.from_labels.appendChild(this.low_range_select);
+                this.from_labels.appendChild(this.high_range_select);
                 this.from_labels.appendChild(series_title);
                 this.from_labels.appendChild(this.series_select);
 
@@ -113,8 +114,11 @@ window.Widget = (function () {
         this.series_select = new StyledElements.Select({'class': 'full'});
         this.series_select.addEventListener('change', create_graph_config.bind(this));
 
-        this.range_select = new StyledElements.Select({'class': 'full'});
-        this.range_select.addEventListener('change', create_graph_config.bind(this));
+        this.low_range_select = new StyledElements.Select({'class': 'full'});
+        this.low_range_select.addEventListener('change', create_graph_config.bind(this));
+
+        this.high_range_select = new StyledElements.Select({'class': 'full'});
+        this.high_range_select.addEventListener('change', create_graph_config.bind(this));
 
         // Create the series title
         var series_title = document.createElement('h3');
@@ -204,8 +208,8 @@ window.Widget = (function () {
 
             // Build  X filters
             var columnNames = Object.keys(this.column_info);
-            var rangeLow = columnNames.indexOf(this.group_axis_select.getValue());
-            var rangeHigh = columnNames.indexOf(this.range_select.getValue());
+            var rangeLow = columnNames.indexOf(this.low_range_select.getValue());
+            var rangeHigh = columnNames.indexOf(this.high_range_select.getValue());
             for (rangeLow; rangeLow <= rangeHigh; rangeLow++) {
                 var checkbox = buildCheckbox.call(this, "filtersX", this.dataset.structure[rangeLow].id);
                 divX.append(checkbox);
@@ -535,8 +539,8 @@ window.Widget = (function () {
         } else {
 
             var columnNames = Object.keys(this.column_info);
-            var rangeLow = columnNames.indexOf(this.group_axis_select.getValue());
-            var rangeHigh = columnNames.indexOf(this.range_select.getValue());
+            var rangeLow = columnNames.indexOf(this.low_range_select.getValue());
+            var rangeHigh = columnNames.indexOf(this.high_range_select.getValue());
 
             // User is probably not done configuring the graph
             if (rangeLow > rangeHigh) {
@@ -689,8 +693,10 @@ window.Widget = (function () {
         this.group_axis_select.clear();
         this.group_axis_select.addEntries(entries);
 
-        this.range_select.clear();
-        this.range_select.addEntries(entries);
+        this.low_range_select.clear();
+        this.low_range_select.addEntries(entries);
+        this.high_range_select.clear();
+        this.high_range_select.addEntries(entries);
 
         this.series_select.clear();
         this.series_select.addEntries(entries);
