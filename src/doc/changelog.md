@@ -1,4 +1,4 @@
-## v1.1.0
+## v1.1.0 (2016-11-24)
 
 - Added the ability to create graphs using column labels instead of column values, allowing the user to generate charts inverting rows and columns.
 - Added configuration tab.
@@ -6,7 +6,7 @@
 - Added title input field to set the title of the charts.
 - Fixed piecharts not working properly (The piecharts where all different while using the same configuration)
 - Normalized GraphConfigurer input parameters for all GraphConfigurers.
-- GraphConfigurers are now shared.
+- GraphConfigurers are now shared between widget and operator.
 - Added GraphConfigurer tests.
 - Added Highcharts workspace creation.
 - Added Highcharts support on the graph creator operator
