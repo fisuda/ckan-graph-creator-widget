@@ -320,9 +320,11 @@ window.Widget = (function () {
 
         var googleHave = this.GoogleChartConfig.hasSelector(elementtype);
         var flotr2Have = this.Flotr2Config.hasSelector(elementtype);
+        var highchartsHave = this.HighChartConfig.hasSelector(elementtype);
 
         this.googleButton.disable();
         this.flotr2Button.disable();
+        this.highchartsButton.disable();
 
         if (googleHave) {
             this.googleButton.enable();
@@ -331,6 +333,10 @@ window.Widget = (function () {
         if (flotr2Have) {
             this.flotr2Button.enable();
         }
+
+        if (highchartsHave) {
+            this.highchartsButton.enable();
+        }
     };
 
     var createWorkspace = function createWorkspace(mashupname) {
@@ -338,50 +344,55 @@ window.Widget = (function () {
             showMsg.call(this, "The data received don't have metadata,  I can't create the workspace", "warning");
         }
 
+        var series;
+
+        if (this.current_graph_type === 'bubblechart') {
+            series = get_bubble_series.call(this);
+        } else {
+            series = get_general_series.call(this);
+        }
+        var config = create_generic_config.call(this, series);
+
+        var operatorOptions = {
+            fromColumnLabels: this.fromColumnLabels,
+            graph_type: this.current_graph_type,
+            series: config.series,
+            filter: config.options.filter,
+            title: config.options.options.title,
+            axisx: config.options.fields.axisx,
+            axisy: config.options.fields.axisy,
+            axisz: config.options.fields.axisz,
+            series_field: config.options.fields.series_field,
+            id_bubble: config.options.fields.id_bubble,
+            groupColumn: config.options.fields.group_column,
+        };
+
+        // Add missing values if uses columnLabels
+        if (this.fromColumnLabels) {
+            var columnNames = Object.keys(this.column_info);
+            var rangeLow = columnNames.indexOf(this.low_range_select.getValue());
+            var rangeHigh = columnNames.indexOf(this.high_range_select.getValue());
+            var range = [];
+            for (rangeLow; rangeLow <= rangeHigh; rangeLow++) {
+                range.push(this.dataset.structure[rangeLow].id);
+            }
+            operatorOptions.range = range;
+
+            operatorOptions.expandedColName = this.series_select.getValue();
+        }
+
         var resource = this.dataset.metadata.id;
         var ckan_server = this.dataset.metadata.ckan_server;
 
         var preferences = {
-            graph_type: this.current_graph_type,
-            graph_fields: {
-                group_column: this.group_axis_select.getValue()
-            },
-            graph_series: [],
             resource: resource,
-            ckan_server: ckan_server
+            ckan_server: ckan_server,
+            configuration: JSON.stringify(operatorOptions),
         };
-
-        if (preferences.graph_type === 'bubblechart') {
-            preferences.graph_fields.axisx_field = this.axisx_select.getValue();
-            preferences.graph_fields.axisy_field = this.axisy_select.getValue();
-            preferences.graph_fields.axisz_field = this.axisz_select.getValue();
-            preferences.graph_fields.series_field = this.series_field_select.getValue();
-            preferences.graph_fields.id_bubble = this.id_bubble_select.getValue();
-            preferences.graph_series = get_bubble_series.call(this);
-        } else {
-            preferences.graph_series = get_general_series.call(this);
-        }
-
-        // We check that there are no fields unfinished
-        if (preferences.graph_series.length === 0) {
-            showMsg.call(this, "Can not create dashboard, a required field is empty.", "warning");
-            return;
-        }
-
-        for (var field in preferences.graph_fields) {
-            if (preferences.graph_fields[field] == null) {
-                showMsg.call(this, "Can not create dashboard, a required field is empty.", "warning");
-                return;
-            }
-        }
-
-        // Convert the preferences that are not text to JSON
-        preferences.graph_series = JSON.stringify(preferences.graph_series);
-        preferences.graph_fields = JSON.stringify(preferences.graph_fields);
 
         MashupPlatform.mashup.createWorkspace({
             name: this.nameinput.getValue(),
-            mashup: 'CoNWeT/' + mashupname + '/1.0.1',
+            mashup: 'CoNWeT/' + mashupname + '/1.0.2',
             preferences: preferences,
             onSuccess: function (workspace) {
                 var msg = "Dashboard " + workspace.name + " created successfully.";
@@ -433,7 +444,7 @@ window.Widget = (function () {
 
         this.googleButton.disable();
 
-        this.flotr2Button = new StyledElements.Button({text: 'Create dashboard with flotr Graph', class: 'btn-success'});
+        this.flotr2Button = new StyledElements.Button({text: 'Create dashboard with Flotr2 Graph', class: 'btn-success'});
         this.flotr2Button.insertInto(mashup_panel);
 
         this.workspace_tab.appendChild(mashup_panel);
@@ -443,6 +454,17 @@ window.Widget = (function () {
         }.bind(this));
 
         this.flotr2Button.disable();
+
+        this.highchartsButton = new StyledElements.Button({text: 'Create dashboard with HighCharts Graph', class: 'btn-success'});
+        this.highchartsButton.insertInto(mashup_panel);
+
+        this.workspace_tab.appendChild(mashup_panel);
+
+        this.highchartsButton.addEventListener("click", function () {
+            createWorkspace.call(this, "CKAN Wirecloud highcharts view");
+        }.bind(this));
+
+        this.highchartsButton.disable();
 
         // create the data selection tab
         // The graph selection tab depends on the data selection tab, so it must be build first

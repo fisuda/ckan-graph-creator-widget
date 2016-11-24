@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-/* globals MashupPlatform, Flotr2Configurer, GoogleChartConfigurer */
+/* globals MashupPlatform, HighChartConfigurer, GoogleChartConfigurer, Flotr2Configurer */
 /* exported CkanGraphCreatorOperator */
 
 window.CkanGraphCreatorOperator = (function () {
@@ -22,91 +22,128 @@ window.CkanGraphCreatorOperator = (function () {
     "use strict";
 
     var CkanGraphCreatorOperator = function CkanGraphCreatorOperator() {
-        this.layout = null;
-        this.group_title = null;
-        this.series_title = null;
-        this.group_axis_select = null;
-        this.series_div = null;
-        this.dataset = null;     // Dataset to be used: {structure: {...}, data: {...}, metadata: {...}}
-        this.column_info = null;
-        this._3axis_alternative = null;
 
-        this.current_graph_type = MashupPlatform.prefs.get('graph_type');
-
-        this.Flotr2Config = new Flotr2Configurer();
+        // Create the graph configurers
+        this.HighChartConfig = new HighChartConfigurer();
         this.GoogleChartConfig = new GoogleChartConfigurer();
+        this.Flotr2Config = new Flotr2Configurer();
+
         // Recieve events for the "dataset" input endpoint
-        MashupPlatform.wiring.registerCallback('dataset', showSeriesInfo.bind(this));
+        MashupPlatform.wiring.registerCallback('dataset', function (dataset) {
 
-    };
+            var options = create_graph_config(dataset);
 
-
-    var showSeriesInfo = function showSeriesInfo(dataset_json) {
-        this.dataset = JSON.parse(dataset_json);
-        this.column_info = {};
-
-        for (var i = 0; i < this.dataset.structure.length; i++) {
-            var id = this.dataset.structure[i].id;
-            this.column_info[id] = this.dataset.structure[i];
-        }
-
-        create_graph_config.call(this);
-    };
-
-    var get_general_series = function get_general_series() {
-        // Get the series from prefs
-        return JSON.parse(MashupPlatform.prefs.get('graph_series'));
-    };
-
-    var get_bubble_series = function get_bubble_series() {
-        return JSON.parse(MashupPlatform.prefs.get('graph_series'));
-    };
-
-    var create_graph_config = function create_graph_config() {
-        var series;
-
-        if (this.current_graph_type === 'bubblechart') {
-            series = get_bubble_series.call(this);
-        } else {
-            series = get_general_series.call(this);
-        }
-
-        if (series.length > 0) {
             if (MashupPlatform.operator.outputs["flotr2-graph-config"].connected) {
-                create_flotr2_config.call(this, series);
+                create_flotr2_config.call(this, options);
             }
-            if (MashupPlatform.operator.outputs["googlecharts-graph-config"].connected) {
-                create_google_charts_config.call(this, series);
+            if (MashupPlatform.operator.outputs['googlecharts-graph-config'].connected) {
+                create_google_charts_config.call(this, options);
             }
-        }
+            if (MashupPlatform.operator.outputs['highcharts-graph-config'].connected) {
+                create_highcharts_config.call(this, options);
+            }
+        }.bind(this));
     };
 
-    var create_flotr2_config = function create_flotr2_config(series) {
-        var config = this.Flotr2Config.configure(series, {
-            graph_type: this.current_graph_type,
-            dataset: this.dataset,
-            fields: JSON.parse(MashupPlatform.prefs.get('graph_fields'))
-        });
+    // Create the graph configuration
+    var create_graph_config = function create_graph_config(dataset_json) {
+        var dataset = JSON.parse(dataset_json);
+        var config = JSON.parse(MashupPlatform.prefs.get('configuration'));
+
+        var columns = {};
+        var series = config.series;
+
+        if (!config.fromColumnLabels) {
+            // Default behaviour
+
+            // Build column info
+            for (var i = 0; i < dataset.structure.length; i++) {
+                var id = dataset.structure[i].id;
+                columns[id] = dataset.structure[i];
+            }
+
+        } else {
+            // From labels behaviour
+            var range = config.range;
+
+            var structure = [];
+            structure.push({id: "newGroupedColumn", type: "string"});
+
+            // Build column info
+            columns = {
+                newGroupedColumn: {id: "newGroupedColumn", type: "string"}
+            };
+            series.forEach(function (name) {
+                columns[name] = {id: name, type: "number"};
+                structure.push({id: name, type: "number"});
+            });
+
+            // Build new dataset
+            var newData = [];
+            var expandedColName = config.expandedColName;
+
+
+            // Create the new set of data to be used
+            range.forEach(function (date, index) {
+                var row = {newGroupedColumn: date};
+
+                dataset.data.forEach(function (d) {
+                    row[d[expandedColName]] = d[date];
+                });
+
+                newData.push(row);
+            }.bind(this));
+
+
+            dataset = {
+                data: newData,
+                structure: structure,
+            };
+        }
+
+        var title = config.title || "";
+
+        return {
+            series: series,
+            options: {
+                graph_type: config.graph_type,
+                dataset: dataset,
+                column_info: columns,
+                fields: {
+                    axisx: config.axisx,
+                    axisy: config.axisy,
+                    axisz: config.axisz,
+                    series_field: config.series_field,
+                    id_bubble: config.id_bubble,
+                    group_column: config.groupColumn,
+                },
+                filter: config.filter,
+                options: {
+                    title: title,
+                },
+            }
+        };
+    };
+
+    var create_flotr2_config = function create_flotr2_config(options) {
+        var config;
+        config = this.Flotr2Config.configure(options.series, options.options);
 
         MashupPlatform.wiring.pushEvent('flotr2-graph-config', JSON.stringify(config));
     };
 
-    var create_google_charts_config = function create_google_charts_config(series) {
-        var config = this.GoogleChartConfig.configure(series, {
-            graph_type: this.current_graph_type,
-            dataset: this.dataset,
-            column_info: this.column_info,
-            fields: JSON.parse(MashupPlatform.prefs.get('graph_fields'))
-        });
-
-        // group_column: this.group_column,
-        //     axisx: this.axisx_select,
-        //     axisy: this.axisy_select,
-        //     axisz: this.axisz_select,
-        //     id_bubble: this.id_bubble
+    var create_google_charts_config = function create_google_charts_config(options) {
+        var config;
+        config = this.GoogleChartConfig.configure(options.series, options.options);
 
         MashupPlatform.wiring.pushEvent('googlecharts-graph-config', JSON.stringify(config));
+    };
 
+    var create_highcharts_config = function create_highcharts_config(options) {
+        var config;
+        config = this.HighChartConfig.configure(options.series, options.options);
+
+        MashupPlatform.wiring.pushEvent('highcharts-graph-config', JSON.stringify(config));
     };
 
     /* test-code */
