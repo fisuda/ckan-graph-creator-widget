@@ -8,6 +8,7 @@
 - Normalized GraphConfigurer input parameters for all GraphConfigurers.
 - GraphConfigurers are now shared.
 - Added GraphConfigurer tests.
+- Added Highcharts workspace creation.
 
 ## v1.0.4
 
