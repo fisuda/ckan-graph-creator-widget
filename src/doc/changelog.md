@@ -1,4 +1,4 @@
-## vx.x.x
+## v1.1.0
 
 - Added the ability to create graphs using column labels instead of column values, allowing the user to generate charts inverting rows and columns.
 - Added configuration tab.
@@ -9,6 +9,7 @@
 - GraphConfigurers are now shared.
 - Added GraphConfigurer tests.
 - Added Highcharts workspace creation.
+- Added Highcharts support on the graph creator operator
 
 ## v1.0.4
 
