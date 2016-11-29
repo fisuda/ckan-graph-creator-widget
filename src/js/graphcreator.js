@@ -398,6 +398,9 @@ window.Widget = (function () {
                 var msg = "Dashboard " + workspace.name + " created successfully.";
                 MashupPlatform.widget.log(msg, MashupPlatform.log.INFO);
                 showMsg(msg, "success");
+
+                // Notify the parent element
+                window.top.postMessage(workspace.owner + "/" + workspace.name, "*");
             },
             onFailure: function (msg) {
                 MashupPlatform.widget.log("Could not create the workspace:\n " + msg);
