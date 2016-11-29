@@ -1,3 +1,8 @@
+## v1.1.1
+
+- Added event when a workspace is created
+- Fixed error when trying to create filters with no data
+
 ## v1.1.0 (2016-11-24)
 
 - Added the ability to create graphs using column labels instead of column values, allowing the user to generate charts inverting rows and columns.

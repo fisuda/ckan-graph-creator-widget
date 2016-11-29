@@ -186,6 +186,11 @@ window.Widget = (function () {
         // Clear the div
         this.filterDiv.innerHTML = "";
 
+        // If theres no data, leave
+        if (!this.dataset) {
+            return;
+        }
+
         // TODO: filters for bubblechart
         if (this.current_graph_type === 'bubblechart') {
             return;
@@ -392,7 +397,7 @@ window.Widget = (function () {
 
         MashupPlatform.mashup.createWorkspace({
             name: this.nameinput.getValue(),
-            mashup: 'CoNWeT/' + mashupname + '/1.0.2',
+            mashup: 'CoNWeT/' + mashupname + '/1.0.3',
             preferences: preferences,
             onSuccess: function (workspace) {
                 var msg = "Dashboard " + workspace.name + " created successfully.";
