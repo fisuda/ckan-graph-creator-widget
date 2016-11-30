@@ -397,7 +397,7 @@ window.Widget = (function () {
 
         MashupPlatform.mashup.createWorkspace({
             name: this.nameinput.getValue(),
-            mashup: 'CoNWeT/' + mashupname + '/1.0.3',
+            mashup: 'CoNWeT/' + mashupname + '/1.0.4',
             preferences: preferences,
             onSuccess: function (workspace) {
                 var msg = "Dashboard " + workspace.name + " created successfully.";
@@ -447,7 +447,7 @@ window.Widget = (function () {
         this.workspace_tab.appendChild(mashup_panel);
 
         this.googleButton.addEventListener("click", function () {
-            createWorkspace.call(this, "CKAN Wirecloud Google View");
+            createWorkspace.call(this, "ckan-google-view");
         }.bind(this));
 
         this.googleButton.disable();
@@ -458,7 +458,7 @@ window.Widget = (function () {
         this.workspace_tab.appendChild(mashup_panel);
 
         this.flotr2Button.addEventListener("click", function () {
-            createWorkspace.call(this, "CKAN Wirecloud flotr2 view");
+            createWorkspace.call(this, "ckan-flotr2-view");
         }.bind(this));
 
         this.flotr2Button.disable();
@@ -469,7 +469,7 @@ window.Widget = (function () {
         this.workspace_tab.appendChild(mashup_panel);
 
         this.highchartsButton.addEventListener("click", function () {
-            createWorkspace.call(this, "CKAN Wirecloud highcharts view");
+            createWorkspace.call(this, "ckan-highcharts-view");
         }.bind(this));
 
         this.highchartsButton.disable();
