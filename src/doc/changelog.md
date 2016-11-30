@@ -1,4 +1,8 @@
-## v1.1.1 (2016-11-29)
+## v1.1.2 (2016-11-30)
+
+- Updated mashups
+
+## v1.1.1
 
 - Added event when a workspace is created
 - Fixed error when trying to create filters with no data
